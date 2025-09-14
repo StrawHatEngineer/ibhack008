@@ -3,14 +3,21 @@ import Hero from './components/Hero'
 import HomeCards from './components/HomeCards'
 import Dashboard from './components/Dashboard'
 import Team from './components/Team'
+import About from './components/About'
+import { BrowserRouter as Router, Routes, Route, Navigate, Link } from 'react-router-dom';
+
 
 const App = () => {
   return (
-    <>
+    <Router>
       <Navbar />
       <Hero />
-      <Dashboard />
-    </>
+      <Routes>
+        <Route exact path="/" element={<Dashboard />} />
+        <Route exact path="/team" element={<Team />} />
+        <Route exact path="/about" element={<About />} />
+      </Routes>
+    </Router>
   )
 }
 
