@@ -1,4 +1,190 @@
-/* Tailwind CSS is handled by the Vite plugin */
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+
+@keyframes pulse {
+  50% {
+    opacity: 0.5;
+  }
+}
+
+@keyframes bounce {
+  0%,
+  20%,
+  50%,
+  80%,
+  100% {
+    transform: translateY(0);
+  }
+  40% {
+    transform: translateY(-30px);
+  }
+  60% {
+    transform: translateY(-15px);
+  }
+}
+
+@keyframes bounce2 {
+  0%,
+  50%,
+  100% {
+    transform: translateY(0);
+  }
+  25% {
+    transform: translateY(25px);
+  }
+  75% {
+    transform: translateY(-10px);
+  }
+}
+body {
+  margin: 0;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", "Oxygen",
+    "Ubuntu", "Cantarell", "Fira Sans", "Droid Sans", "Helvetica Neue",
+    sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  background-color: #0b121a;
+}
+
+code {
+  font-family: source-code-pro, Menlo, Monaco, Consolas, "Courier New",
+    monospace;
+}
+
+.textbackground {
+  background: var(
+    --grad,
+    linear-gradient(
+      270deg,
+      #d2ffa5 0%,
+      #b0ffde 14.25%,
+      #b3e8ff 34.57%,
+      #d3b1ff 55.92%,
+      #ffb6d5 83.53%,
+      #ffb5b5 100%
+    )
+  );
+  background-clip: text;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.sphere1 {
+  border-radius: 665px;
+  background: #7aebfb;
+  filter: blur(250px);
+}
+
+.animate-pulse-slow {
+  animation: pulse 10s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+.animate-bounce-slow {
+  animation: bounce2 10s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  animation-delay: 1s;
+}
+
+.animate-bounce-slow-late {
+  animation: bounce2 10s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  animation-delay: 3s;
+}
+.blacktextbackground {
+  background: radial-gradient(
+    162.5% 162.5% at 49.9% 0%,
+    #fff 0%,
+    rgba(255, 255, 255, 0.25) 100%
+  );
+  background-clip: text;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.titletextbackground {
+  background: linear-gradient(
+    268deg,
+    #fff 46.14%,
+    rgba(255, 255, 255, 0.58) 93.57%
+  );
+  background-clip: text;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.bordergradient {
+  position: relative;
+}
+
+.bordergradient:before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  border-radius: 50px;
+  border: 2px solid transparent;
+  background: linear-gradient(
+      135deg,
+      #deffea 0%,
+      #f67a7a 63.54%,
+      #d4d9ff 80.73%,
+      #dc79ff 92%
+    )
+    border-box;
+  -webkit-mask: linear-gradient(#fff 0 0) padding-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: destination-out;
+  mask-composite: exclude;
+}
+
+.contextboxbackground {
+  background: linear-gradient(
+    180deg,
+    rgba(145, 145, 145, 0.25) 0%,
+    rgba(217, 217, 217, 0.05) 100%
+  );
+  box-shadow: 0px 4px 4px 0px rgba(0, 0, 0, 0.25);
+  backdrop-filter: blur(2px);
+}
+.contextboxtextshadow {
+  text-shadow: 0px 0px 10px rgba(255, 255, 255, 0.75);
+}
+
+.texxtboxgradient {
+  position: relative;
+}
+
+.textboxgradient:before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  border-radius: 15px;
+  border: 2px solid transparent;
+  background: linear-gradient(
+      135deg,
+      #deffea 0%,
+      #f67a7a 63.54%,
+      #d4d9ff 80.73%,
+      #dc79ff 92%
+    )
+    border-box;
+  -webkit-mask: linear-gradient(#fff 0 0) padding-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: destination-out;
+  mask-composite: exclude;
+}
+
+.backdroper {
+  background: url("./assets/_shape_.png") lightgray 0% 0% / 71.923828125px
+      71.923828125px repeat,
+    linear-gradient(
+      270deg,
+      rgba(255, 255, 255, 0.01) -20%,
+      rgba(40, 40, 40, 0.06) 75.76%,
+      rgba(255, 255, 255, 0.01) 123.64%
+    );
+  backdrop-filter: blur(90px);
+}

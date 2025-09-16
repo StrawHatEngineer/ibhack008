@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Wifi, X, Info, Mail, FileSpreadsheet, HardDrive, FileText } from 'lucide-react';
 
 const ConnectionStatusModal = ({ isOpen, onClose }) => {
-  const connectedTools = [
+  const [connectedTools, setConnectedTools] = useState([
     {
       id: 'gmail',
       name: 'gmail',
@@ -11,7 +11,7 @@ const ConnectionStatusModal = ({ isOpen, onClose }) => {
       iconColor: 'text-red-500'
     },
     {
-      id: 'googlesheets',   
+      id: 'googlesheets',
       name: 'googlesheets',
       icon: FileSpreadsheet,
       connected: true,
@@ -27,11 +27,21 @@ const ConnectionStatusModal = ({ isOpen, onClose }) => {
     {
       id: 'googledocs',
       name: 'googledocs',
-      icon: FileText,   
+      icon: FileText,
       connected: true,
       iconColor: 'text-blue-600'
     }
-  ];
+  ]);
+
+  const toggleConnection = (id) => {
+    setConnectedTools(prevTools =>
+      prevTools.map(tool =>
+        tool.id === id ? { ...tool, connected: !tool.connected } : tool
+      )
+    );
+    // Dummy API call
+    console.log(`Toggling connection for ${id}`);
+  };
 
   const connectedCount = connectedTools.filter(tool => tool.connected).length;
 
@@ -75,11 +85,16 @@ const ConnectionStatusModal = ({ isOpen, onClose }) => {
                 </div>
               </div>
               <div className="flex items-center space-x-3">
-                {tool.connected && (
-                  <span className="text-green-600 font-semibold text-sm bg-green-50 px-3 py-1 rounded-full border border-green-200">
-                    CONNECTED
-                  </span>
-                )}
+                <button
+                  onClick={() => toggleConnection(tool.id)}
+                  className={`text-sm px-3 py-1 rounded-full border ${
+                    tool.connected
+                      ? 'text-green-600 bg-green-50 border-green-200'
+                      : 'text-red-600 bg-red-50 border-red-200'
+                  }`}
+                >
+                  {tool.connected ? 'CONNECTED' : 'DISCONNECTED'}
+                </button>
               </div>
             </div>
           ))}
@@ -106,7 +121,7 @@ const ConnectionStatus = () => {
   return (
     <>
       {/* Floating Connection Status Icon */}
-      <div className="fixed top-6 right-6 z-40">
+      <div className="fixed bottom-6 right-6 z-40">
         <button
           onClick={() => setIsModalOpen(true)}
           className="bg-indigo-600 hover:bg-indigo-700 text-white p-3 rounded-full shadow-lg hover:shadow-xl transition-all duration-200 group"

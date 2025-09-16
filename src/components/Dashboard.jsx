@@ -1,15 +1,16 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { PlusCircle, RefreshCw } from "lucide-react";
 
 function Widget({ title, content, loading, onContentUpdate }) {
-  const handleEmailClick = (messageId) => {
-    window.open(`https://mail.google.com/mail/u/0/#inbox/${messageId}`, '_blank');
+  const [readItems, setReadItems] = useState([]);
+
+  const handleEmailClick = (link) => {
+    window.open(`${link}`, '_blank');
   };
 
   const markAsRead = (index) => {
     console.log(`Item ${index} marked as read/done`);
-    const updatedContent = content.filter((_, i) => i !== index);
-    onContentUpdate(updatedContent);
+    setReadItems([...readItems, index]);
   };
 
   const renderContent = () => {
@@ -17,25 +18,26 @@ function Widget({ title, content, loading, onContentUpdate }) {
     
     if (Array.isArray(content)) {
       return (
-        <ul className="space-y-2">
-          {content.map((item, index) => {
+        <ul className="space-y-2 mr-4">
+          {content.map((item, index) => {   
+            const isRead = readItems.includes(index);
             if (typeof item === 'object' && item !== null) {
-              const emailSubject = item['email subject'] || item.subject || item.Subject || 'No Subject';
-              const messageId = item['message_id'] || item.messageId || item.id || '';
+              const emailSubject = item['subject'] || item.subject || item.Subject || 'No Subject';
+              const link = item['link'] || item.link || item.Link || '';
 
               return (
                 <li key={index} className="flex justify-between items-center">
                   <button
-                    onClick={() => handleEmailClick(messageId)}
-                    className="text-left w-full p-2 text-sm text-indigo-600 hover:text-indigo-800 hover:bg-indigo-50 rounded transition-colors cursor-pointer border-none bg-transparent"
+                    onClick={() => handleEmailClick(link)}
+                    className={`text-left w-full p-2 text-sm text-indigo-600 hover:text-indigo-800 hover:bg-indigo-50 rounded transition-colors cursor-pointer border-none bg-transparent ${isRead ? 'line-through' : ''}`}
                   >
-                    • {emailSubject}
+                    <i className="fa fa-envelope inline mr-2"></i> {emailSubject}
                   </button>
                   <button
                     onClick={() => markAsRead(index)}
                     className="ml-2 text-sm text-green-600 hover:text-green-800"
                   >
-                    ✔️
+                    <i className={`fa ${isRead ? 'fa-check' : ''} font-bold border-2 border-green-600 p-1 rounded ${isRead ? '' : 'w-6 h-6'}`}></i>
                   </button>
                 </li>
               );
@@ -43,16 +45,16 @@ function Widget({ title, content, loading, onContentUpdate }) {
               return (
                 <li key={index} className="flex justify-between items-center">
                   <button
-                    onClick={() => handleEmailClick('')}
-                    className="text-left w-full p-2 text-sm text-indigo-600 hover:text-indigo-800 hover:bg-indigo-50 rounded transition-colors cursor-pointer border-none bg-transparent"
+                    onClick={() => handleEmailClick(link)}
+                    className={`text-left w-full p-2 text-sm text-indigo-600 hover:text-indigo-800 hover:bg-indigo-50 rounded transition-colors cursor-pointer border-none bg-transparent ${isRead ? 'line-through' : ''}`}
                   >
-                    • {String(item)}
+                    <i className="fa fa-envelope inline mr-2"></i> {String(item)}
                   </button>
                   <button
                     onClick={() => markAsRead(index)}
                     className="ml-2 text-sm text-green-600 hover:text-green-800"
                   >
-                    ✔️
+                    <i className={`fa ${isRead ? 'fa-check' : ''} font-bold border-2 border-green-600 p-1 rounded ${isRead ? '' : 'w-6 h-6'}`}></i>
                   </button>
                 </li>
               );
@@ -61,59 +63,62 @@ function Widget({ title, content, loading, onContentUpdate }) {
         </ul>
       );
     } else if (typeof content === 'object' && content !== null) {
-      const emailSubject = content['email subject'] || content.subject || content.Subject || 'No Subject';
-      const messageId = content['message_id'] || content.messageId || content.id || '';
+      const emailSubject = content['email_subject'] || content.subject || content.Subject || 'No Subject';
+      const link = content['link'] || content.link || content.Link || '';
       return (
         <div className="flex justify-between items-center">
           <button
-            onClick={() => handleEmailClick(messageId)}
+            onClick={() => handleEmailClick(link)}
             className="text-left w-full p-2 text-sm text-indigo-600 hover:text-indigo-800 hover:bg-indigo-50 rounded transition-colors cursor-pointer border-none bg-transparent"
           >
-            • {emailSubject}
+            <i className="fa fa-envelope inline mr-2"></i> {emailSubject}
           </button>
           <button
             onClick={() => markAsRead(0)}
             className="ml-2 text-sm text-green-600 hover:text-green-800"
           >
-            ✔️
+            <i className={`fa ${readItems.includes(0) ? 'fa-check' : ''} font-bold border-2 border-green-600 p-1 rounded ${readItems.includes(0) ? '' : 'w-6 h-6'}`}></i>
           </button>
         </div>
       );
     } else if (typeof content === 'string') {
       return (
         <ul className="space-y-2">
-          {content.split('\n').map((item, index) => (
-            <li key={index} className="flex justify-between items-center">
-              <button
-                onClick={() => handleEmailClick('')}
-                className="text-left w-full p-2 text-sm text-indigo-600 hover:text-indigo-800 hover:bg-indigo-50 rounded transition-colors cursor-pointer border-none bg-transparent"
-              >
-                • {item}
-              </button>
-              <button
-                onClick={() => markAsRead(index)}
-                className="ml-2 text-sm text-green-600 hover:text-green-800"
-              >
-                ✔️
-              </button>
-            </li>
-          ))}
+          {content.split('\n').map((item, index) => {
+            const isRead = readItems.includes(index);
+            return (
+              <li key={index} className="flex justify-between items-center">
+                <button
+                  onClick={() => handleEmailClick(link)}
+                  className={`text-left w-full p-2 text-sm text-indigo-600 hover:text-indigo-800 hover:bg-indigo-50 rounded transition-colors cursor-pointer border-none bg-transparent ${isRead ? 'line-through' : ''}`}
+                >
+                  <i className="fa fa-envelope inline mr-2"></i> {item}
+                </button>
+                <button
+                  onClick={() => markAsRead(index)}
+                  className="ml-2 text-sm text-green-600 hover:text-green-800"
+                >
+                  <i className={`fa ${isRead ? 'fa-check' : ''} font-bold border-2 border-green-600 p-1 rounded ${isRead ? '' : 'w-6 h-6'}`}></i>
+                </button>
+              </li>
+            );
+          })}
         </ul>
       );
     } else {
       return (
         <div className="flex justify-between items-center">
           <button
-            onClick={() => handleEmailClick('')}
+            onClick={() => handleEmailClick(link)}
             className="text-left w-full p-2 text-sm text-indigo-600 hover:text-indigo-800 hover:bg-indigo-50 rounded transition-colors cursor-pointer border-none bg-transparent"
           >
-            • {String(content)}
+            <i className="fa fa-envelope inline mr-2"></i> {String(content)}
           </button>
           <button
             onClick={() => markAsRead(0)}
             className="ml-2 text-sm text-green-600 hover:text-green-800"
           >
-            ✔️
+            <i className={`fa ${readItems.includes(0) ? 'fa-check' : ''} font-bold border-2 border-green-600 p-1 rounded ${readItems.includes(0) ? '' : 'w-6 h-6'}`}></i>
           </button>
         </div>
       );
@@ -137,14 +142,14 @@ function Dashboard() {
   const [showModal, setShowModal] = useState(false);
   const [newPrompt, setNewPrompt] = useState("");
   const [workflowStatus, setWorkflowStatus] = useState('idle'); 
-  const [workflow_id, setWorkflowId] = useState('01994835-953f-7386-8069-30b18afbb8e1');
+  const [workflow_id, setWorkflowId] = useState('01994cdb-9588-7c8a-ab7d-9f3f764ca29a');
   const [statusMessage, setStatusMessage] = useState('');
+  const isPollingRef = useRef(false);
   
   function parseLlmResponse(llmResponse) {
     const cleanStr = llmResponse.replace(/```json|```/g, "").trim();
     const parsed = JSON.parse(cleanStr);
-    const data = JSON.parse(parsed.llm_response);
-    return data; 
+    return parsed; 
   }
 
   const executeWorkflow = async () => {
@@ -172,7 +177,7 @@ function Dashboard() {
       const data = await response.json();
       console.log('Workflow execution response:', data);
       
-      // After successful execution, start polling for status
+      // After successful execution, update status and ensure polling is active
       setWorkflowStatus('running');
       setStatusMessage('Workflow is running...');
       pollWorkflowStatus();
@@ -206,15 +211,16 @@ function Dashboard() {
         const nodes = data.dag.nodes;
         const secondLastNode = nodes[nodes.length - 2];
         let llmResponse = secondLastNode ? secondLastNode.result : null;
+        llmResponse = JSON.parse(llmResponse).formatted_response;
         if (llmResponse) {
           llmResponse = parseLlmResponse(llmResponse);
-          console.log("coming", llmResponse.messages);
-          setLlmResponse(llmResponse.messages);
+          console.log("llm response:", llmResponse);
+          setLlmResponse(llmResponse);
           setWidgets([
             { 
               id: 1, 
               title: "Important Emails", 
-              content: llmResponse.messages, 
+              content: llmResponse, 
               loading: false 
             }
           ]);
@@ -222,33 +228,45 @@ function Dashboard() {
         return true; // Status is complete
       } else if (status === 'running') {
         setStatusMessage('Workflow is still running...');
-        setTimeout(pollWorkflowStatus, 3000);
         return false; // Continue polling
       } else if (status === 'failed' || status === 'error') {
         setStatusMessage('Workflow failed');
         return true; // Stop polling
       } else {
         setStatusMessage(`Workflow status: ${status}`);
-        setTimeout(pollWorkflowStatus, 3000);
         return false; // Continue polling
       }
     } catch (error) {
       console.error('Error fetching workflow status:', error);
       setWorkflowStatus('error');
       setStatusMessage(`Error fetching status: ${error.message}`);
+      isPollingRef.current = false; // Reset polling flag on error
       return true; // Stop polling on error
     }
   };
 
   const pollWorkflowStatus = async () => {
+    if (isPollingRef.current) {
+      console.log('Polling already active, skipping...');
+      return; // Prevent multiple polling cycles
+    }
+    
+    isPollingRef.current = true;
+    console.log('Starting polling cycle...');
+    
     const poll = async () => {
       const isComplete = await fetchWorkflowStatus();
       if (!isComplete) {
         // Continue polling every 3 seconds
-        setTimeout(poll, 3000);
+        setTimeout(poll, 6000);
+      } else {
+        // Polling completed, reset the flag
+        isPollingRef.current = false;
+        console.log('Polling cycle completed');
       }
     };
-    poll();
+    // Wait 3 seconds before making the first status check
+    setTimeout(poll, 1000);
   };
 
   useEffect(() => {

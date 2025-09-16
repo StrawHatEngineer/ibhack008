@@ -5,6 +5,7 @@ import Dashboard from './components/Dashboard'
 import Team from './components/Team'
 import About from './components/About'
 import { BrowserRouter as Router, Routes, Route, Navigate, Link } from 'react-router-dom';
+import ConnectionStatus from './components/ConnectionStatus'
 
 
 const App = () => {
@@ -17,6 +18,7 @@ const App = () => {
         <Route exact path="/team" element={<Team />} />
         <Route exact path="/about" element={<About />} />
       </Routes>
+      <ConnectionStatus />
     </Router>
   )
 }
