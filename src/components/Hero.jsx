@@ -10,13 +10,13 @@ const Hero = () => {
     },
     {
       icon: MessageSquare,
-      title: "Slack Integration",
-      description: "Streamline team communications"
+      title: "Slack Intelligence",
+      description: "Smart Slack message prioritization and management"
     },
     {
       icon: Github,
-      title: "GitHub Workflows",
-      description: "Development task automation"
+      title: "GitHub Intelligence",
+      description: "Smart GitHub PR, code review, and task management"
     }
   ];
 
@@ -35,7 +35,7 @@ const Hero = () => {
             <div className="mb-6">
               <span className="inline-flex items-center px-4 py-2 rounded-full bg-white/10 backdrop-blur-sm border border-white/20 text-white text-sm font-medium mb-4">
                 <Zap className="w-4 h-4 mr-2 text-yellow-400" />
-                AI-Powered Productivity Platform
+                Axis AI-Powered Productivity Platform
               </span>
             </div>
             
@@ -45,7 +45,7 @@ const Hero = () => {
             </h1>
             
             <p className="text-xl lg:text-2xl text-white/90 mb-8 leading-relaxed">
-              Your intelligent productivity companion to help you prioritize emails, manage Slack communications, and streamline GitHub workflows—all in one unified dashboard.
+              Your intelligent productivity companion to help you prioritize emails, manage Slack communications, and streamline GitHub Code review, and task management—all in one unified dashboard.
             </p>
           </div>
           
@@ -74,22 +74,22 @@ const Hero = () => {
               ))}
             </div>
             
-            {/* <div className="mt-8 p-6 contextboxbackground rounded-xl border border-white/10">
+            <div className="mt-8 p-6 contextboxbackground rounded-xl border border-white/10">
               <div className="grid grid-cols-3 gap-4 text-center">
                 <div>
-                  <div className="text-2xl font-bold text-white textbackground">3</div>
-                  <div className="text-sm text-white/70">Platforms</div>
+                  <div className="text-2xl font-bold text-white textbackground">∞</div>
+                  <div className="text-sm text-white/70">Widgets</div>
                 </div>
                 <div>
                   <div className="text-2xl font-bold text-white textbackground">∞</div>
-                  <div className="text-sm text-white/70">Workflows</div>
+                  <div className="text-sm text-white/70">Integrations</div>
                 </div>
                 <div>
-                  <div className="text-2xl font-bold text-white textbackground">AI</div>
-                  <div className="text-sm text-white/70">Powered</div>
+                  <div className="text-2xl font-bold text-white textbackground">Axis</div>
+                  <div className="text-sm text-white/70">AI</div>
                 </div>
               </div>
-            </div> */}
+            </div>
           </div>
         </div>
       </div>

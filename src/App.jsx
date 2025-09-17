@@ -5,7 +5,6 @@ import Team from './components/Team'
 import About from './components/About'
 import ActivityTracker from './components/ActivityTracker'
 import { BrowserRouter as Router, Routes, Route, Navigate, Link } from 'react-router-dom';
-import ConnectionStatus from './components/ConnectionStatus'
 import Hero from './components/Hero'
 import { ActivityProvider } from './contexts/ActivityContext'
 
@@ -20,7 +19,6 @@ const App = () => {
           <Route exact path="/team" element={<Team />} />
           <Route exact path="/about" element={<About />} />
         </Routes>
-        <ConnectionStatus />
       </Router>
     </ActivityProvider>
   )

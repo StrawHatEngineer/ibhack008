@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, memo } from "react";
-import { PlusCircle, RefreshCw, Github, GitPullRequest, GitCommit, Star, Bug } from "lucide-react";
+import { PlusCircle, RefreshCw, Github, GitPullRequest, GitCommit, Star, Bug, Settings } from "lucide-react";
 import WorkflowModal from "./WorkflowModal";
 import { getSavedWorkflows, updateWorkflowLastRun, saveWorkflow } from "../utils/workflowStorage";
 import { useActivity } from "../contexts/ActivityContext";
@@ -226,33 +226,77 @@ const GitHubDashboard = memo(function GitHubDashboard({
   onUpdateWidget, 
   onRunWorkflow, 
   onShowModal,
+  onShowConnectionsModal,
   workflowStatus,
-  statusMessage 
+  statusMessage,
+  dashboardId,
+  connectedTools 
 }) {
-  // Filter widgets that are GitHub-related
-  const githubWidgets = widgets.filter(widget => 
-    widget.title.toLowerCase().includes('github') || 
-    widget.title.toLowerCase().includes('git') ||
-    widget.title.toLowerCase().includes('pull') ||
-    widget.title.toLowerCase().includes('commit') ||
-    widget.title.toLowerCase().includes('issue') ||
-    widget.title.toLowerCase().includes('repo')
-  );
+  // Filter widgets that belong to this dashboard
+  // First check for dashboardId match, fallback to title-based filtering for backwards compatibility
+  const githubWidgets = widgets.filter(widget => {
+    // If widget has a dashboardId, check if it matches this dashboard
+    if (widget.dashboardId) {
+      return widget.dashboardId === dashboardId;
+    }
+    // Fallback to title-based filtering for widgets without dashboardId
+    return widget.title.toLowerCase().includes('github') || 
+           widget.title.toLowerCase().includes('git') ||
+           widget.title.toLowerCase().includes('pull') ||
+           widget.title.toLowerCase().includes('commit') ||
+           widget.title.toLowerCase().includes('issue') ||
+           widget.title.toLowerCase().includes('repo');
+  });
 
   return (
     <div className="mb-8">
       <div className="flex justify-between items-center mb-6">
-        <h2 className="text-2xl font-bold text-gray-800 flex items-center">
-          <Github className="mr-3 w-7 h-7" />
-          GitHub Management
-        </h2>
-        <button
-          onClick={onShowModal}
-          className="flex items-center bg-gray-800 text-white px-4 py-2 rounded-lg shadow hover:bg-gray-900 transition-colors"
-        >
-          <PlusCircle className="mr-2" size={20} />
-          Add Widget
-        </button>
+        <div className="flex items-center space-x-4">
+          <h2 className="text-2xl font-bold text-gray-800 flex items-center">
+            <Github className="mr-3 w-7 h-7" />
+            GitHub Management
+          </h2>
+          {/* Connection indicators */}
+          <div className="flex items-center space-x-1">
+            {connectedTools && connectedTools.length > 0 ? (
+              <>
+                {connectedTools.slice(0, 4).map((tool) => (
+                  <div
+                    key={tool.id}
+                    className={`w-7 h-7 rounded-full ${tool.color} flex items-center justify-center text-sm text-white shadow-sm`}
+                    title={tool.name}
+                  >
+                    {tool.icon}
+                  </div>
+                ))}
+                {connectedTools.length > 4 && (
+                  <div className="w-7 h-7 rounded-full bg-gray-400 flex items-center justify-center text-sm text-white shadow-sm">
+                    +{connectedTools.length - 4}
+                  </div>
+                )}
+              </>
+            ) : (
+              <span className="text-sm text-gray-500">No connections</span>
+            )}
+          </div>
+        </div>
+        <div className="flex items-center space-x-2">
+          <button
+            onClick={onShowConnectionsModal}
+            className="flex items-center bg-gray-100 text-gray-700 px-3 py-2 rounded-lg shadow hover:bg-gray-200 transition-colors"
+            title="Manage connections"
+          >
+            <Settings className="mr-2" size={18} />
+            <span className="hidden sm:inline">Connections</span>
+          </button>
+          <button
+            onClick={onShowModal}
+            className="flex items-center bg-gray-800 text-white px-4 py-2 rounded-lg shadow hover:bg-gray-900 transition-colors"
+          >
+            <PlusCircle className="mr-2" size={20} />
+            Add Widget
+          </button>
+        </div>
       </div>
 
       {githubWidgets.length === 0 ? (

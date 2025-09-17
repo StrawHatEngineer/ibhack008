@@ -10,7 +10,7 @@ const extractShortTitle = (prompt, maxLength = 100) => {
   return cleanPrompt.substring(0, maxLength) + '...';
 };
 
-export default function WorkflowModal({ isOpen, onClose, onWorkflowComplete }) {
+export default function WorkflowModal({ isOpen, onClose, onWorkflowComplete, dashboardId, dashboardType }) {
   const [step, setStep] = useState("initial");
   const [initialPrompt, setInitialPrompt] = useState("");
   const [userInput, setUserInput] = useState("");
@@ -76,7 +76,7 @@ export default function WorkflowModal({ isOpen, onClose, onWorkflowComplete }) {
       const response = await fetch("https://https--ibhack008-instabase.instabase.site.sandboxes.run/api/v2/aihub/workflows", {
         method: "POST",
         headers: {
-          "Authorization": "Bearer gvdNIYxMEEDW8jPp0Cbfq7DF9mGSHF",
+          "Authorization": `Bearer ${import.meta.env.API_TOKEN}`,
           "ib-context": "ibhack008",
           "Content-Type": "application/json",
         },
@@ -103,7 +103,9 @@ export default function WorkflowModal({ isOpen, onClose, onWorkflowComplete }) {
         saveWorkflow({
           id: newWorkflowId,
           title: extractShortTitle(prompt),
-          createdAt: new Date().toISOString()
+          createdAt: new Date().toISOString(),
+          dashboardId: dashboardId || null,
+          dashboardType: dashboardType || null
         });
       } catch (error) {
         console.error('Error saving workflow to storage:', error);
@@ -129,7 +131,7 @@ export default function WorkflowModal({ isOpen, onClose, onWorkflowComplete }) {
       const response = await fetch(`https://https--ibhack008-instabase.instabase.site.sandboxes.run/api/v2/aihub/workflows/${wfId}/directive/stream`, {
         method: "POST",
         headers: {
-          "Authorization": "Bearer gvdNIYxMEEDW8jPp0Cbfq7DF9mGSHF",
+          "Authorization": `Bearer ${import.meta.env.API_TOKEN}`,
           "ib-context": "ibhack008",
           "Content-Type": "application/json",
         },
@@ -229,7 +231,7 @@ export default function WorkflowModal({ isOpen, onClose, onWorkflowComplete }) {
       const response = await fetch(`https://https--ibhack008-instabase.instabase.site.sandboxes.run/api/v2/aihub/workflows/${wfId}/directive/stream`, {
         method: "POST", 
         headers: {
-          "Authorization": "Bearer gvdNIYxMEEDW8jPp0Cbfq7DF9mGSHF",
+          "Authorization": `Bearer ${import.meta.env.API_TOKEN}`,
           "ib-context": "ibhack008",
           "Content-Type": "application/json",
         },
@@ -328,7 +330,7 @@ export default function WorkflowModal({ isOpen, onClose, onWorkflowComplete }) {
       const response = await fetch(`https://https--ibhack008-instabase.instabase.site.sandboxes.run/api/v2/aihub/workflows/${workflowId}/resume`, {
         method: "POST",
         headers: {
-          "Authorization": "Bearer gvdNIYxMEEDW8jPp0Cbfq7DF9mGSHF",
+          "Authorization": `Bearer ${import.meta.env.API_TOKEN}`,
           "ib-context": "ibhack008",
         },
         body: JSON.stringify({

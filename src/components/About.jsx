@@ -18,7 +18,7 @@ const About = () => {
   const features = [
     {
       icon: Mail,
-      title: "Smart Email Management",
+      title: "Email Intelligence",
       description: "AI-powered email prioritization that learns your preferences and helps you focus on what matters most."
     },
     {
@@ -28,7 +28,7 @@ const About = () => {
     },
     {
       icon: Github,
-      title: "GitHub Workflow Automation",
+      title: "GitHub Intelligence",
       description: "Streamline your development process with automated workflows and intelligent task management."
     }
   ];
@@ -36,28 +36,28 @@ const About = () => {
   const benefits = [
     {
       icon: Clock,
-      title: "Save 3+ Hours Daily",
+      title: "Save ∞ Hours Daily",
       description: "Reduce time spent on email and message management"
     },
     {
       icon: Target,
-      title: "95% Priority Accuracy",
+      title: "∞ Priority Accuracy",
       description: "AI learns your patterns for precise prioritization"
     },
     {
       icon: Shield,
-      title: "Enterprise Security",
+      title: "Privacy Protection",
       description: "Bank-grade encryption and privacy protection"
     },
     {
       icon: BarChart3,
-      title: "Productivity Analytics",
+      title: "Productivity Tracking",
       description: "Track and optimize your workflow efficiency"
     }
   ];
 
   const values = [
-    "Intelligent automation that adapts to your workflow",
+    "Intelligent automation that adapts to your daily tasks",
     "Privacy-first approach with your data security",
     "Seamless integration with your existing tools",
     "Continuous learning and improvement"
@@ -88,23 +88,23 @@ const About = () => {
             </h1>
             
             <p className="text-xl lg:text-2xl text-white/90 max-w-4xl mx-auto leading-relaxed mb-12">
-              We're on a mission to transform how professionals manage their digital workflows. 
-              Our AI-powered platform brings order to the chaos of modern communication, 
+              We're on a mission to transform how professionals manage their daily tasks. 
+              Our AI-powered platform brings order to the chaos of modern daily communication media, 
               helping you focus on what truly drives success.
             </p>
 
             <div className="flex flex-col sm:flex-row gap-6 justify-center">
               <div className="contextboxbackground rounded-xl p-6 border border-white/10 max-w-sm">
-                <div className="text-3xl font-bold text-white textbackground mb-2">50K+</div>
+                <div className="text-3xl font-bold text-white textbackground mb-2">∞</div>
                 <div className="text-white/70">Hours Saved Daily</div>
               </div>
               <div className="contextboxbackground rounded-xl p-6 border border-white/10 max-w-sm">
-                <div className="text-3xl font-bold text-white textbackground mb-2">95%</div>
+                <div className="text-3xl font-bold text-white textbackground mb-2">∞</div>
                 <div className="text-white/70">User Satisfaction</div>
               </div>
               <div className="contextboxbackground rounded-xl p-6 border border-white/10 max-w-sm">
-                <div className="text-3xl font-bold text-white textbackground mb-2">3</div>
-                <div className="text-white/70">Integrated Platforms</div>
+                <div className="text-3xl font-bold text-white textbackground mb-2">∞</div>
+                <div className="text-white/70">Integrations</div>
               </div>
             </div>
           </div>
@@ -116,7 +116,7 @@ const About = () => {
                 Core Capabilities
               </h2>
               <p className="text-xl text-white/80 max-w-3xl mx-auto">
-                Three powerful platforms united under one intelligent system
+                Three powerful integrations united under one intelligent system
               </p>
             </div>
 
@@ -209,7 +209,7 @@ const About = () => {
                     their productivity with our AI-powered platform.
                   </p>
                   
-                  <button className="inline-flex items-center px-8 py-4 bg-white text-indigo-700 rounded-lg font-semibold hover:bg-gray-100 transition-colors shadow-lg group">
+                  <button onClick={() => window.location.href = '/'} className="inline-flex items-center px-8 py-4 bg-white text-indigo-700 rounded-lg font-semibold hover:bg-gray-100 transition-colors shadow-lg group">
                     Get Started Today
                     <ArrowRight className="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform duration-300" />
                   </button>
@@ -231,11 +231,11 @@ const About = () => {
               </p>
               
               <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                <button className="inline-flex items-center px-6 py-3 border-2 border-white/30 text-white rounded-lg font-semibold hover:bg-white/10 transition-colors backdrop-blur-sm">
+                <button onClick={() => window.location.href = '/team'} className="inline-flex items-center px-6 py-3 border-2 border-white/30 text-white rounded-lg font-semibold hover:bg-white/10 transition-colors backdrop-blur-sm">
                   <Users className="w-5 h-5 mr-2" />
                   Meet the Team
                 </button>
-                <button className="inline-flex items-center px-6 py-3 border-2 border-white/30 text-white rounded-lg font-semibold hover:bg-white/10 transition-colors backdrop-blur-sm">
+                <button onClick={() => window.location.href = '/'} className="inline-flex items-center px-6 py-3 border-2 border-white/30 text-white rounded-lg font-semibold hover:bg-white/10 transition-colors backdrop-blur-sm">
                   <MessageSquare className="w-5 h-5 mr-2" />
                   Contact Us
                 </button>

@@ -5,10 +5,12 @@ import { getSavedWorkflows, updateWorkflowLastRun, saveWorkflow, getCachedWorkfl
 import EmailDashboard from "./EmailDashboard";
 import SlackDashboard from "./SlackDashboard";
 import GitHubDashboard from "./GitHubDashboard";
+import ConnectionsModal from "./ConnectionsModal";
 import { useActivity } from "../contexts/ActivityContext";
+import { getConnectedTools } from "../utils/connectionsStorage";
 
 // Custom Dashboard Component
-const CustomDashboard = ({ dashboardId, dashboardTitle, onShowModal, widgets, onUpdateWidget, onRunWorkflow }) => {
+const CustomDashboard = ({ dashboardId, dashboardTitle, onShowModal, onShowConnectionsModal, widgets, onUpdateWidget, onRunWorkflow, connectedTools }) => {
   const [customTitle, setCustomTitle] = useState(dashboardTitle || 'Custom Dashboard');
   const [isEditing, setIsEditing] = useState(false);
 
@@ -21,28 +23,53 @@ const CustomDashboard = ({ dashboardId, dashboardTitle, onShowModal, widgets, on
           <div className="flex-shrink-0 bg-gradient-to-r from-indigo-500 to-purple-600 text-white p-2 rounded-lg">
             <Sparkles className="h-5 w-5" />
           </div>
-          {isEditing ? (
-            <input
-              type="text"
-              value={customTitle}
-              onChange={(e) => setCustomTitle(e.target.value)}
-              onBlur={() => setIsEditing(false)}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter') {
-                  setIsEditing(false);
-                }
-              }}
-              className="text-xl font-semibold text-gray-800 bg-transparent border-b-2 border-indigo-300 focus:outline-none focus:border-indigo-500"
-              autoFocus
-            />
-          ) : (
-            <h2 
-              className="text-xl font-semibold text-gray-800 cursor-pointer hover:text-indigo-600 transition-colors"
-              onClick={() => setIsEditing(true)}
-            >
-              {customTitle}
-            </h2>
-          )}
+          <div className="flex flex-col">
+            {isEditing ? (
+              <input
+                type="text"
+                value={customTitle}
+                onChange={(e) => setCustomTitle(e.target.value)}
+                onBlur={() => setIsEditing(false)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    setIsEditing(false);
+                  }
+                }}
+                className="text-xl font-semibold text-gray-800 bg-transparent border-b-2 border-indigo-300 focus:outline-none focus:border-indigo-500"
+                autoFocus
+              />
+            ) : (
+              <h2 
+                className="text-xl font-semibold text-gray-800 cursor-pointer hover:text-indigo-600 transition-colors"
+                onClick={() => setIsEditing(true)}
+              >
+                {customTitle}
+              </h2>
+            )}
+            {/* Connection indicators */}
+            <div className="flex items-center space-x-1 mt-1">
+              {connectedTools && connectedTools.length > 0 ? (
+                <>
+                  {connectedTools.slice(0, 3).map((tool) => (
+                    <div
+                      key={tool.id}
+                      className={`w-6 h-6 rounded-full ${tool.color} flex items-center justify-center text-xs text-white`}
+                      title={tool.name}
+                    >
+                      {tool.icon}
+                    </div>
+                  ))}
+                  {connectedTools.length > 3 && (
+                    <div className="w-6 h-6 rounded-full bg-gray-400 flex items-center justify-center text-xs text-white">
+                      +{connectedTools.length - 3}
+                    </div>
+                  )}
+                </>
+              ) : (
+                <span className="text-xs text-gray-500">No connections</span>
+              )}
+            </div>
+          </div>
           <button
             onClick={() => setIsEditing(true)}
             className="text-gray-400 hover:text-gray-600 transition-colors"
@@ -51,13 +78,23 @@ const CustomDashboard = ({ dashboardId, dashboardTitle, onShowModal, widgets, on
             <Settings className="h-4 w-4" />
           </button>
         </div>
-        <button
-          onClick={onShowModal}
-          className="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg flex items-center space-x-2 transition-colors"
-        >
-          <Plus className="h-4 w-4" />
-          <span>Add Widget</span>
-        </button>
+        <div className="flex items-center space-x-2">
+          <button
+            onClick={onShowConnectionsModal}
+            className="bg-gray-100 hover:bg-gray-200 text-gray-700 px-3 py-2 rounded-lg flex items-center space-x-2 transition-colors"
+            title="Manage connections"
+          >
+            <Settings className="h-4 w-4" />
+            <span className="hidden sm:inline">Connections</span>
+          </button>
+          <button
+            onClick={onShowModal}
+            className="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg flex items-center space-x-2 transition-colors"
+          >
+            <Plus className="h-4 w-4" />
+            <span>Add Widget</span>
+          </button>
+        </div>
       </div>
 
       {customWidgets.length === 0 ? (
@@ -161,6 +198,14 @@ function Dashboard() {
   const [statusMessage, setStatusMessage] = useState('');
   const isPollingRef = useRef(false);
   
+  // State for tracking which dashboard is requesting a new widget
+  const [currentDashboardContext, setCurrentDashboardContext] = useState(null);
+  
+  // State for managing connections
+  const [showConnectionsModal, setShowConnectionsModal] = useState(false);
+  const [currentConnectionsDashboard, setCurrentConnectionsDashboard] = useState(null);
+  const [dashboardConnections, setDashboardConnections] = useState({});
+  
   // State for managing dashboard instances
   const [activeDashboards, setActiveDashboards] = useState([
     { id: 'dashboard-1', type: 'email', title: 'Email Management' },
@@ -191,7 +236,7 @@ function Dashboard() {
         await fetch(`https://https--ibhack008-instabase.instabase.site.sandboxes.run/api/v2/aihub/workflows/${workflow.id}/execute`, {
           method: 'POST',
           headers: {
-            'Authorization': 'Bearer gvdNIYxMEEDW8jPp0Cbfq7DF9mGSHF',
+            'Authorization': `Bearer ${import.meta.env.API_TOKEN}`,
             'ib-context': 'ibhack008',
             'Content-Type': 'application/json'
           },
@@ -221,7 +266,7 @@ function Dashboard() {
       for (const workflow of defaultWorkflows) {
         const response = await fetch(`https://https--ibhack008-instabase.instabase.site.sandboxes.run/api/v2/aihub/workflows/${workflow.id}/status`, {
           headers: {
-            'Authorization': 'Bearer gvdNIYxMEEDW8jPp0Cbfq7DF9mGSHF',
+            'Authorization': `Bearer ${import.meta.env.API_TOKEN}`,
             'ib-context': 'ibhack008'
           }
         });
@@ -287,7 +332,8 @@ function Dashboard() {
                 title: completedWorkflow.title,
                 content: completedWorkflow.content,
                 loading: false,
-                workflowId: completedWorkflow.workflowId
+                workflowId: completedWorkflow.workflowId,
+                dashboardId: null // Default widgets are not assigned to specific dashboards initially
               };
               updatedWidgets.push(newWidget);
             }
@@ -353,7 +399,14 @@ function Dashboard() {
     pollDefaultWorkflowsStatus();
     // Then load saved workflows which will be appended after
     loadSavedWorkflows();
+    // Load connections for all dashboards
+    loadAllConnections();
   }, []);
+
+  // Load connections when active dashboards change
+  useEffect(() => {
+    loadAllConnections();
+  }, [activeDashboards]);
 
   // Update activity tracker whenever widgets change
   useEffect(() => {
@@ -375,7 +428,8 @@ function Dashboard() {
         title: defaultWorkflow.title,
         content: cachedResult || "",
         loading: !cachedResult, // Only loading if no cached result
-        workflowId: defaultWorkflow.id
+        workflowId: defaultWorkflow.id,
+        dashboardId: null // Default widgets are not assigned to specific dashboards initially
       };
     });
     
@@ -425,7 +479,8 @@ function Dashboard() {
             title: workflow.title,
             content: "",
             loading: false,
-            workflowId: workflow.id
+            workflowId: workflow.id,
+            dashboardId: workflow.dashboardId || null
           }));
           
           // Append saved workflows after existing widgets (default loading widgets will remain first)
@@ -464,7 +519,7 @@ function Dashboard() {
       const executeResponse = await fetch(`https://https--ibhack008-instabase.instabase.site.sandboxes.run/api/v2/aihub/workflows/${workflowId}/execute`, {
         method: 'POST',
         headers: {
-          'Authorization': 'Bearer gvdNIYxMEEDW8jPp0Cbfq7DF9mGSHF',
+          'Authorization': `Bearer ${import.meta.env.API_TOKEN}`,
           'ib-context': 'ibhack008',
           'Content-Type': 'application/json'
         },
@@ -488,7 +543,7 @@ function Dashboard() {
 
         const statusResponse = await fetch(`https://https--ibhack008-instabase.instabase.site.sandboxes.run/api/v2/aihub/workflows/${workflowId}/status`, {
           headers: {
-            'Authorization': 'Bearer gvdNIYxMEEDW8jPp0Cbfq7DF9mGSHF',
+            'Authorization': `Bearer ${import.meta.env.API_TOKEN}`,
           'ib-context': 'ibhack008'
           }
         });
@@ -632,6 +687,44 @@ function Dashboard() {
     setActiveDashboards(prev => prev.filter(dashboard => dashboard.id !== dashboardId));
   };
 
+  // Function to handle showing modal with dashboard context
+  const handleShowModal = (dashboardId, dashboardType) => {
+    setCurrentDashboardContext({ dashboardId, dashboardType });
+    setShowModal(true);
+  };
+
+  // Function to handle closing modal and clearing context
+  const handleCloseModal = () => {
+    setShowModal(false);
+    setCurrentDashboardContext(null);
+  };
+
+  // Function to handle showing connections modal
+  const handleShowConnectionsModal = (dashboardId, dashboardType, dashboardTitle) => {
+    setCurrentConnectionsDashboard({ dashboardId, dashboardType, dashboardTitle });
+    setShowConnectionsModal(true);
+  };
+
+  // Function to handle closing connections modal
+  const handleCloseConnectionsModal = () => {
+    setShowConnectionsModal(false);
+    setCurrentConnectionsDashboard(null);
+  };
+
+  // Function to load connections for all dashboards
+  const loadAllConnections = () => {
+    const connections = {};
+    activeDashboards.forEach(dashboard => {
+      connections[dashboard.type] = getConnectedTools(dashboard.type);
+    });
+    setDashboardConnections(connections);
+  };
+
+  // Function to handle connections update
+  const handleConnectionsUpdate = () => {
+    loadAllConnections();
+  };
+
   // AddNewDashboard component
   const AddNewDashboard = () => {
     return (
@@ -733,11 +826,13 @@ function Dashboard() {
                   widgets={widgets}
                   onUpdateWidget={updateWidgetContent}
                   onRunWorkflow={runIndividualWorkflow}
-                  onShowModal={() => setShowModal(true)}
+                  onShowModal={() => handleShowModal(dashboard.id, dashboard.type)}
+                  onShowConnectionsModal={() => handleShowConnectionsModal(dashboard.id, dashboard.type, dashboard.title)}
                   workflowStatus={workflowStatus}
                   statusMessage={statusMessage}
                   dashboardId={dashboard.id}
                   dashboardTitle={dashboard.title}
+                  connectedTools={dashboardConnections[dashboard.type] || []}
                 />
                 
                 {/* Remove dashboard button */}
@@ -762,8 +857,18 @@ function Dashboard() {
 
         <WorkflowModal 
           isOpen={showModal}
-          onClose={() => setShowModal(false)}
+          onClose={handleCloseModal}
           onWorkflowComplete={handleWorkflowComplete}
+          dashboardId={currentDashboardContext?.dashboardId}
+          dashboardType={currentDashboardContext?.dashboardType}
+        />
+
+        <ConnectionsModal 
+          isOpen={showConnectionsModal}
+          onClose={handleCloseConnectionsModal}
+          dashboardType={currentConnectionsDashboard?.dashboardType}
+          dashboardTitle={currentConnectionsDashboard?.dashboardTitle}
+          onConnectionsUpdate={handleConnectionsUpdate}
         />
       </div>
     </div>
