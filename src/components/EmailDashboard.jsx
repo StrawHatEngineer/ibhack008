@@ -17,11 +17,13 @@ function EmailWidget({ title, content, loading, onContentUpdate, workflowId, onR
   };
 
   const renderEmailContent = () => {
+    console.log(`EmailWidget ${title} - Loading:`, loading, 'Content:', content);
+    
     if (loading) return "Loading emails...";
     
     if (Array.isArray(content) && content.length > 0) {
       return (
-        <ul className="space-y-2 mr-4">
+        <ul className="space-y-2 mr-4 ms-4">
           {content.map((item, index) => {   
             const isRead = readItems.includes(index);
             if (typeof item === 'object' && item !== null) {
@@ -159,7 +161,7 @@ function EmailWidget({ title, content, loading, onContentUpdate, workflowId, onR
   };
 
   return (
-    <div className="rounded-2xl bg-blue-50 shadow-lg p-6 w-full h-96 flex flex-col border-2 border-blue-100">
+    <div className="rounded-2xl bg-blue-50 shadow-lg p-6 w-98 h-96 flex flex-col border-2 border-blue-100">
       <div className="flex justify-between items-center mb-4">
         <h2 className="text-xl font-semibold text-blue-800 flex items-center">
           <Mail className="mr-2 w-5 h-5" />
@@ -201,6 +203,10 @@ function EmailDashboard({
     widget.title.toLowerCase().includes('mail')
   );
 
+  // Debug logging
+  console.log('EmailDashboard - All widgets:', widgets);
+  console.log('EmailDashboard - Filtered email widgets:', emailWidgets);
+
   return (
     <div className="mb-8">
       <div className="flex justify-between items-center mb-6">
@@ -213,20 +219,20 @@ function EmailDashboard({
           className="flex items-center bg-blue-600 text-white px-4 py-2 rounded-lg shadow hover:bg-blue-700 transition-colors"
         >
           <PlusCircle className="mr-2" size={20} />
-          Add Email Workflow
+          Add Widget
         </button>
       </div>
 
       {emailWidgets.length === 0 ? (
         <div className="bg-blue-50 border-2 border-dashed border-blue-200 rounded-2xl p-12 text-center">
           <Mail className="mx-auto w-16 h-16 text-blue-300 mb-4" />
-          <h3 className="text-xl font-semibold text-blue-800 mb-2">No Email Workflows Yet</h3>
+          <h3 className="text-xl font-semibold text-blue-800 mb-2">No Email Widgets Yet</h3>
           <p className="text-blue-600 mb-4">Create your first email workflow to start managing your inbox efficiently.</p>
           <button
             onClick={onShowModal}
             className="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-colors"
           >
-            Create Email Workflow
+            Create Widget
           </button>
         </div>
       ) : (

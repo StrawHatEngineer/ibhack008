@@ -222,20 +222,20 @@ function SlackDashboard({
           className="flex items-center bg-purple-600 text-white px-4 py-2 rounded-lg shadow hover:bg-purple-700 transition-colors"
         >
           <PlusCircle className="mr-2" size={20} />
-          Add Slack Workflow
+          Add Widget
         </button>
       </div>
 
       {slackWidgets.length === 0 ? (
         <div className="bg-purple-50 border-2 border-dashed border-purple-200 rounded-2xl p-12 text-center">
           <MessageSquare className="mx-auto w-16 h-16 text-purple-300 mb-4" />
-          <h3 className="text-xl font-semibold text-purple-800 mb-2">No Slack Workflows Yet</h3>
+          <h3 className="text-xl font-semibold text-purple-800 mb-2">No Slack Widgets Yet</h3>
           <p className="text-purple-600 mb-4">Create your first Slack workflow to start managing your team communications.</p>
           <button
             onClick={onShowModal}
             className="bg-purple-600 text-white px-6 py-3 rounded-lg hover:bg-purple-700 transition-colors"
           >
-            Create Slack Workflow
+            Create Widget
           </button>
         </div>
       ) : (

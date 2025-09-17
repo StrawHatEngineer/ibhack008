@@ -1,5 +1,5 @@
 import { NavLink } from 'react-router-dom';
-import { Home, Users, Info, Sparkles, ChevronDown } from 'lucide-react';
+import { Home, Users, Info, Sparkles, ChevronDown, BarChart3 } from 'lucide-react';
 import logo from "../assets/images/instabase.png";
 
 const Navbar = () => {
@@ -10,6 +10,7 @@ const Navbar = () => {
 
   const navItems = [
     { to: "/", label: "Home", icon: Home },
+    { to: "/activity", label: "Activity", icon: BarChart3 },
     { to: "/team", label: "Team", icon: Users },
     { to: "/about", label: "About", icon: Info },
   ];

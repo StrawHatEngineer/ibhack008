@@ -245,7 +245,7 @@ function GitHubDashboard({
           className="flex items-center bg-gray-800 text-white px-4 py-2 rounded-lg shadow hover:bg-gray-900 transition-colors"
         >
           <PlusCircle className="mr-2" size={20} />
-          Add GitHub Workflow
+          Add Widget
         </button>
       </div>
 
@@ -258,7 +258,7 @@ function GitHubDashboard({
             onClick={onShowModal}
             className="bg-gray-800 text-white px-6 py-3 rounded-lg hover:bg-gray-900 transition-colors"
           >
-            Create GitHub Workflow
+            Create Widget
           </button>
         </div>
       ) : (

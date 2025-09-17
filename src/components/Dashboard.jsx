@@ -1,11 +1,153 @@
 import { useState, useEffect, useRef } from "react";
-import { PlusCircle, RefreshCw } from "lucide-react";
+import { PlusCircle, RefreshCw, Mail, MessageSquare, Github, Plus, Settings, Sparkles } from "lucide-react";
 import WorkflowModal from "./WorkflowModal";
 import { getSavedWorkflows, updateWorkflowLastRun, saveWorkflow } from "../utils/workflowStorage";
 import EmailDashboard from "./EmailDashboard";
 import SlackDashboard from "./SlackDashboard";
 import GitHubDashboard from "./GitHubDashboard";
 
+// Custom Dashboard Component
+const CustomDashboard = ({ dashboardId, dashboardTitle, onShowModal, widgets, onUpdateWidget, onRunWorkflow }) => {
+  const [customTitle, setCustomTitle] = useState(dashboardTitle || 'Custom Dashboard');
+  const [isEditing, setIsEditing] = useState(false);
+
+  const customWidgets = widgets.filter(widget => widget.dashboardId === dashboardId);
+
+  return (
+    <div className="bg-white rounded-lg shadow-md p-6">
+      <div className="flex justify-between items-center mb-6">
+        <div className="flex items-center space-x-3">
+          <div className="flex-shrink-0 bg-gradient-to-r from-indigo-500 to-purple-600 text-white p-2 rounded-lg">
+            <Sparkles className="h-5 w-5" />
+          </div>
+          {isEditing ? (
+            <input
+              type="text"
+              value={customTitle}
+              onChange={(e) => setCustomTitle(e.target.value)}
+              onBlur={() => setIsEditing(false)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') {
+                  setIsEditing(false);
+                }
+              }}
+              className="text-xl font-semibold text-gray-800 bg-transparent border-b-2 border-indigo-300 focus:outline-none focus:border-indigo-500"
+              autoFocus
+            />
+          ) : (
+            <h2 
+              className="text-xl font-semibold text-gray-800 cursor-pointer hover:text-indigo-600 transition-colors"
+              onClick={() => setIsEditing(true)}
+            >
+              {customTitle}
+            </h2>
+          )}
+          <button
+            onClick={() => setIsEditing(true)}
+            className="text-gray-400 hover:text-gray-600 transition-colors"
+            title="Edit title"
+          >
+            <Settings className="h-4 w-4" />
+          </button>
+        </div>
+        <button
+          onClick={onShowModal}
+          className="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg flex items-center space-x-2 transition-colors"
+        >
+          <Plus className="h-4 w-4" />
+          <span>Add Widget</span>
+        </button>
+      </div>
+
+      {customWidgets.length === 0 ? (
+        <div className="text-center py-12 bg-gray-50 rounded-lg border-2 border-dashed border-gray-300">
+          <div className="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-gray-100 mb-4">
+            <Sparkles className="h-6 w-6 text-gray-400" />
+          </div>
+          <h3 className="text-lg font-medium text-gray-900 mb-2">Your Custom Dashboard</h3>
+          <p className="text-gray-500 mb-4">Start building your personalized workflow by adding widgets</p>
+          <button
+            onClick={onShowModal}
+            className="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-2 rounded-lg inline-flex items-center space-x-2 transition-colors"
+          >
+            <Plus className="h-4 w-4" />
+            <span>Add Your First Widget</span>
+          </button>
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {customWidgets.map((widget) => (
+            <div key={widget.id} className="bg-gray-50 rounded-lg p-4 border border-gray-200">
+              <div className="flex justify-between items-start mb-3">
+                <h3 className="font-medium text-gray-800">{widget.title}</h3>
+                <button
+                  onClick={() => onRunWorkflow(widget.workflowId)}
+                  className="text-indigo-600 hover:text-indigo-800 transition-colors"
+                  disabled={widget.loading}
+                >
+                  {widget.loading ? (
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-indigo-600"></div>
+                  ) : (
+                    <RefreshCw className="h-4 w-4" />
+                  )}
+                </button>
+              </div>
+              <div className="text-sm text-gray-600">
+                {widget.loading ? (
+                  <div className="flex items-center space-x-2">
+                    <div className="animate-pulse bg-gray-300 h-4 w-3/4 rounded"></div>
+                  </div>
+                ) : widget.content ? (
+                  <div className="max-h-32 overflow-y-auto">
+                    {typeof widget.content === 'string' ? widget.content : JSON.stringify(widget.content)}
+                  </div>
+                ) : (
+                  <span className="text-gray-400">No content yet</span>
+                )}
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+};
+
+// Available dashboard types configuration
+const DASHBOARD_TYPES = {
+  email: {
+    id: 'email',
+    name: 'Email Dashboard',
+    description: 'Manage and prioritize your email communications',
+    icon: Mail,
+    component: EmailDashboard,
+    color: 'bg-blue-500'
+  },
+  slack: {
+    id: 'slack', 
+    name: 'Slack Dashboard',
+    description: 'Streamline team communications and messages',
+    icon: MessageSquare,
+    component: SlackDashboard,
+    color: 'bg-green-500'
+  },
+  github: {
+    id: 'github',
+    name: 'GitHub Dashboard', 
+    description: 'Development task automation and workflow management',
+    icon: Github,
+    component: GitHubDashboard,
+    color: 'bg-purple-500'
+  },
+  custom: {
+    id: 'custom',
+    name: 'Custom Dashboard',
+    description: 'Build your own personalized dashboard with custom widgets',
+    icon: Sparkles,
+    component: CustomDashboard,
+    color: 'bg-gradient-to-r from-indigo-500 to-purple-600'
+  }
+};
 
 function Dashboard() {
 
@@ -16,6 +158,13 @@ function Dashboard() {
   const [workflowStatus, setWorkflowStatus] = useState('idle'); 
   const [statusMessage, setStatusMessage] = useState('');
   const isPollingRef = useRef(false);
+  
+  // State for managing dashboard instances
+  const [activeDashboards, setActiveDashboards] = useState([
+    { id: 'dashboard-1', type: 'email', title: 'Email Management' },
+    { id: 'dashboard-2', type: 'github', title: 'GitHub Management' },
+    { id: 'dashboard-3', type: 'slack', title: 'Slack Management' }
+  ]);
   
   // Default workflows that auto-load on page refresh
   const defaultWorkflows = [
@@ -115,31 +264,31 @@ function Dashboard() {
         setWidgets(prevWidgets => {
           let updatedWidgets = [...prevWidgets];
           
-          completedWorkflows.forEach((completedWorkflow, index) => {
+          completedWorkflows.forEach((completedWorkflow) => {
             const existingIndex = updatedWidgets.findIndex(w => w.workflowId === completedWorkflow.workflowId);
             
-            if (existingIndex === -1) {
-              // Add new default workflow
-              const newWidget = {
-                id: index + 1,
-                title: completedWorkflow.title,
-                content: completedWorkflow.content,
-                loading: false,
-                workflowId: completedWorkflow.workflowId
-              };
-              updatedWidgets.unshift(newWidget);
-            } else {
-              // Update existing widget
+            if (existingIndex !== -1) {
+              // Update existing widget (should always find one since we create loading widgets first)
               updatedWidgets[existingIndex] = {
                 ...updatedWidgets[existingIndex],
                 content: completedWorkflow.content,
                 loading: false
               };
+            } else {
+              // Fallback: Add new widget if not found (shouldn't happen with new flow)
+              console.warn(`Widget not found for workflow ${completedWorkflow.workflowId}, creating new one`);
+              const newWidget = {
+                id: updatedWidgets.length + 1,
+                title: completedWorkflow.title,
+                content: completedWorkflow.content,
+                loading: false,
+                workflowId: completedWorkflow.workflowId
+              };
+              updatedWidgets.push(newWidget);
             }
           });
           
-          // Re-index all widgets
-          return updatedWidgets.map((widget, index) => ({ ...widget, id: index + 1 }));
+          return updatedWidgets;
         });
       }
       
@@ -185,9 +334,9 @@ function Dashboard() {
   };
 
   useEffect(() => {
-    // Initialize default widgets first
+    // Initialize default widgets first with loading states
     initializeDefaultWidgets();
-    // Start default workflow polling first to ensure it appears at the front
+    // Start polling to check for existing workflow results (don't execute)
     pollDefaultWorkflowsStatus();
     // Then load saved workflows which will be appended after
     loadSavedWorkflows();
@@ -196,7 +345,19 @@ function Dashboard() {
   const initializeDefaultWidgets = () => {
     const savedWorkflows = getSavedWorkflows();
     
-    // Add all default workflows if they don't exist
+    // Create loading widgets for default workflows immediately
+    const defaultWidgets = defaultWorkflows.map((defaultWorkflow, index) => ({
+      id: index + 1,
+      title: defaultWorkflow.title,
+      content: "",
+      loading: true, // Start with loading state
+      workflowId: defaultWorkflow.id
+    }));
+    
+    // Set the default widgets with loading states
+    setWidgets(defaultWidgets);
+    
+    // Add all default workflows to storage if they don't exist
     defaultWorkflows.forEach(defaultWorkflow => {
       const exists = savedWorkflows.some(w => w.id === defaultWorkflow.id);
       
@@ -226,14 +387,14 @@ function Dashboard() {
       // Convert saved workflows to widgets if there are any
       if (savedWorkflows.length > 0) {
         setWidgets(prevWidgets => {
-          // Filter out any duplicates based on workflowId and exclude default workflows (they'll be auto-loaded)
+          // Filter out any duplicates based on workflowId and exclude default workflows (they're already loaded with loading states)
           const existingWorkflowIds = prevWidgets.map(w => w.workflowId).filter(Boolean);
           const defaultWorkflowIds = defaultWorkflows.map(w => w.id);
           const newWorkflows = savedWorkflows.filter(w => 
             !existingWorkflowIds.includes(w.id) && !defaultWorkflowIds.includes(w.id)
           );
           
-          // Generate widgets for new workflows, starting ID after existing widgets
+          // Generate widgets for new non-default workflows
           const savedWidgets = newWorkflows.map((workflow, index) => ({
             id: prevWidgets.length + index + 1,
             title: workflow.title,
@@ -242,7 +403,7 @@ function Dashboard() {
             workflowId: workflow.id
           }));
           
-          // Append saved workflows after existing widgets (default workflows will be first)
+          // Append saved workflows after existing widgets (default loading widgets will remain first)
           return [...prevWidgets, ...savedWidgets];
         });
       }
@@ -419,6 +580,76 @@ function Dashboard() {
     }, 100);
   };
 
+  // Function to add new dashboard
+  const addNewDashboard = (dashboardType) => {
+    const newId = `dashboard-${Date.now()}`;
+    const dashboardConfig = DASHBOARD_TYPES[dashboardType];
+    
+    if (!dashboardConfig) {
+      console.error('Unknown dashboard type:', dashboardType);
+      return;
+    }
+
+    const newDashboard = {
+      id: newId,
+      type: dashboardType,
+      title: dashboardConfig.name
+    };
+
+    setActiveDashboards(prev => [...prev, newDashboard]);
+  };
+
+  // Function to remove dashboard
+  const removeDashboard = (dashboardId) => {
+    setActiveDashboards(prev => prev.filter(dashboard => dashboard.id !== dashboardId));
+  };
+
+  // AddNewDashboard component
+  const AddNewDashboard = () => {
+    return (
+      <div className="bg-white rounded-lg border-2 border-dashed border-gray-300 p-8">
+        <div className="text-center mb-6">
+          <div className="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-gray-100 mb-4">
+            <Plus className="h-6 w-6 text-gray-600" />
+          </div>
+          <h3 className="text-lg font-medium text-gray-900 mb-2">Add New Dashboard</h3>
+          <p className="text-gray-500">Choose a dashboard type to get started</p>
+        </div>
+        
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          {Object.values(DASHBOARD_TYPES).map((dashboardType) => {
+            const IconComponent = dashboardType.icon;
+            const isCustom = dashboardType.id === 'custom';
+            
+            return (
+              <button
+                key={dashboardType.id}
+                onClick={() => addNewDashboard(dashboardType.id)}
+                className={`group relative bg-white p-6 rounded-lg border border-gray-200 hover:border-indigo-300 hover:shadow-md transition-all duration-200 text-left ${isCustom ? 'ring-2 ring-purple-200 hover:ring-purple-300' : ''}`}
+              >
+                <div className="flex items-start space-x-4">
+                  <div className={`flex-shrink-0 text-white p-2 rounded-lg group-hover:scale-110 transition-transform duration-200 ${dashboardType.color}`}>
+                    <IconComponent className="h-5 w-5" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <h4 className={`text-sm font-medium group-hover:transition-colors ${isCustom ? 'text-purple-700 group-hover:text-purple-800' : 'text-gray-900 group-hover:text-indigo-600'}`}>
+                      {dashboardType.name}
+                      {isCustom && <span className="ml-1 text-xs bg-purple-100 text-purple-600 px-2 py-0.5 rounded-full">NEW</span>}
+                    </h4>
+                    <p className="text-xs text-gray-500 mt-1 line-clamp-2">
+                      {dashboardType.description}
+                    </p>
+                  </div>
+                </div>
+                <div className={`absolute inset-0 rounded-lg border-2 border-transparent transition-colors duration-200 ${isCustom ? 'group-hover:border-purple-200' : 'group-hover:border-indigo-200'}`}></div>
+              </button>
+            );
+          })}
+        </div>
+      </div>
+    );
+  };
+
   return (
     <div className="min-h-screen bg-gray-100 py-12 px-6">
       <div className="ms-10 mr-10 mx-auto">
@@ -458,36 +689,47 @@ function Dashboard() {
         </header>
 
         <div className="space-y-12 mb-12">
-          {/* Email Management Section */}
-          <EmailDashboard 
-            widgets={widgets}
-            onUpdateWidget={updateWidgetContent}
-            onRunWorkflow={runIndividualWorkflow}
-            onShowModal={() => setShowModal(true)}
-            workflowStatus={workflowStatus}
-            statusMessage={statusMessage}
-          />
+          {/* Dynamic Dashboard Rendering */}
+          {activeDashboards.map((dashboard) => {
+            const dashboardConfig = DASHBOARD_TYPES[dashboard.type];
+            if (!dashboardConfig) {
+              console.error('Unknown dashboard type:', dashboard.type);
+              return null;
+            }
 
-          {/* GitHub Management Section */}
-          <GitHubDashboard 
-            widgets={widgets}
-            onUpdateWidget={updateWidgetContent}
-            onRunWorkflow={runIndividualWorkflow}
-            onShowModal={() => setShowModal(true)}
-            workflowStatus={workflowStatus}
-            statusMessage={statusMessage}
-          />
+            const DashboardComponent = dashboardConfig.component;
+            
+            return (
+              <div key={dashboard.id} className="relative">
+                <DashboardComponent 
+                  widgets={widgets}
+                  onUpdateWidget={updateWidgetContent}
+                  onRunWorkflow={runIndividualWorkflow}
+                  onShowModal={() => setShowModal(true)}
+                  workflowStatus={workflowStatus}
+                  statusMessage={statusMessage}
+                  dashboardId={dashboard.id}
+                  dashboardTitle={dashboard.title}
+                />
+                
+                {/* Remove dashboard button */}
+                {activeDashboards.length > 1 && (
+                  <button
+                    onClick={() => removeDashboard(dashboard.id)}
+                    className="absolute -top-3 -right-3 bg-red-500 hover:bg-red-600 text-white p-2 rounded-full shadow-md transition-colors duration-200 z-10"
+                    title="Remove Dashboard"
+                  >
+                    <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                  </button>
+                )}
+              </div>
+            );
+          })}
 
-          {/* Slack Management Section */}
-          <SlackDashboard 
-            widgets={widgets}
-            onUpdateWidget={updateWidgetContent}
-            onRunWorkflow={runIndividualWorkflow}
-            onShowModal={() => setShowModal(true)}
-            workflowStatus={workflowStatus}
-            statusMessage={statusMessage}
-          />
-
+          {/* Add New Dashboard Section */}
+          <AddNewDashboard />
         </div>
 
         <WorkflowModal 
