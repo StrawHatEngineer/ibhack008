@@ -76,7 +76,7 @@ export default function WorkflowModal({ isOpen, onClose, onWorkflowComplete, das
       const response = await fetch("https://https--ibhack008-instabase.instabase.site.sandboxes.run/api/v2/aihub/workflows", {
         method: "POST",
         headers: {
-          "Authorization": `Bearer ${import.meta.env.API_TOKEN}`,
+          "Authorization": `Bearer ${import.meta.env.VITE_API_TOKEN}`,
           "ib-context": "ibhack008",
           "Content-Type": "application/json",
         },
@@ -131,7 +131,7 @@ export default function WorkflowModal({ isOpen, onClose, onWorkflowComplete, das
       const response = await fetch(`https://https--ibhack008-instabase.instabase.site.sandboxes.run/api/v2/aihub/workflows/${wfId}/directive/stream`, {
         method: "POST",
         headers: {
-          "Authorization": `Bearer ${import.meta.env.API_TOKEN}`,
+          "Authorization": `Bearer ${import.meta.env.VITE_API_TOKEN}`,
           "ib-context": "ibhack008",
           "Content-Type": "application/json",
         },
@@ -231,7 +231,7 @@ export default function WorkflowModal({ isOpen, onClose, onWorkflowComplete, das
       const response = await fetch(`https://https--ibhack008-instabase.instabase.site.sandboxes.run/api/v2/aihub/workflows/${wfId}/directive/stream`, {
         method: "POST", 
         headers: {
-          "Authorization": `Bearer ${import.meta.env.API_TOKEN}`,
+          "Authorization": `Bearer ${import.meta.env.VITE_API_TOKEN}`,
           "ib-context": "ibhack008",
           "Content-Type": "application/json",
         },
@@ -330,7 +330,7 @@ export default function WorkflowModal({ isOpen, onClose, onWorkflowComplete, das
       const response = await fetch(`https://https--ibhack008-instabase.instabase.site.sandboxes.run/api/v2/aihub/workflows/${workflowId}/resume`, {
         method: "POST",
         headers: {
-          "Authorization": `Bearer ${import.meta.env.API_TOKEN}`,
+          "Authorization": `Bearer ${import.meta.env.VITE_API_TOKEN}`,
           "ib-context": "ibhack008",
         },
         body: JSON.stringify({

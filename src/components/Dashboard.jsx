@@ -216,7 +216,7 @@ function Dashboard() {
   // Default workflows that auto-load on page refresh
   const defaultWorkflows = [
     { id: '019956fa-eb1f-700b-8c47-a9ae53236c23', title: 'Important Emails' },
-    { id: '01995274-54ce-79a3-97cc-43d301c90a6f', title: 'Follow Up Emails' }
+    { id: '01995738-d264-700b-8d31-e9342843f854', title: 'Follow Up Emails' }
   ];
   
   function parseLlmResponse(llmResponse) {
@@ -236,7 +236,7 @@ function Dashboard() {
         await fetch(`https://https--ibhack008-instabase.instabase.site.sandboxes.run/api/v2/aihub/workflows/${workflow.id}/execute`, {
           method: 'POST',
           headers: {
-            'Authorization': `Bearer ${import.meta.env.API_TOKEN}`,
+            'Authorization': `Bearer ${import.meta.env.VITE_API_TOKEN}`,
             'ib-context': 'ibhack008',
             'Content-Type': 'application/json'
           },
@@ -264,9 +264,13 @@ function Dashboard() {
       let completedWorkflows = [];
       
       for (const workflow of defaultWorkflows) {
+        console.log('headers', {
+          'Authorization': `Bearer ${import.meta.env.VITE_API_TOKEN}`,
+          'ib-context': 'ibhack008'
+        });
         const response = await fetch(`https://https--ibhack008-instabase.instabase.site.sandboxes.run/api/v2/aihub/workflows/${workflow.id}/status`, {
           headers: {
-            'Authorization': `Bearer ${import.meta.env.API_TOKEN}`,
+            'Authorization': `Bearer ${import.meta.env.VITE_API_TOKEN}`,
             'ib-context': 'ibhack008'
           }
         });
@@ -519,7 +523,7 @@ function Dashboard() {
       const executeResponse = await fetch(`https://https--ibhack008-instabase.instabase.site.sandboxes.run/api/v2/aihub/workflows/${workflowId}/execute`, {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${import.meta.env.API_TOKEN}`,
+          'Authorization': `Bearer ${import.meta.env.VITE_API_TOKEN}`,
           'ib-context': 'ibhack008',
           'Content-Type': 'application/json'
         },
@@ -543,7 +547,7 @@ function Dashboard() {
 
         const statusResponse = await fetch(`https://https--ibhack008-instabase.instabase.site.sandboxes.run/api/v2/aihub/workflows/${workflowId}/status`, {
           headers: {
-            'Authorization': `Bearer ${import.meta.env.API_TOKEN}`,
+            'Authorization': `Bearer ${import.meta.env.VITE_API_TOKEN}`,
           'ib-context': 'ibhack008'
           }
         });
@@ -839,7 +843,7 @@ function Dashboard() {
                 {activeDashboards.length > 1 && (
                   <button
                     onClick={() => removeDashboard(dashboard.id)}
-                    className="absolute -top-3 -right-3 bg-red-500 hover:bg-red-600 text-white p-2 rounded-full shadow-md transition-colors duration-200 z-10"
+                    className="absolute -top-2 -right-2 bg-red-500 hover:bg-red-600 text-white p-1.5 rounded-full shadow-md transition-colors duration-200 z-10"
                     title="Remove Dashboard"
                   >
                     <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">

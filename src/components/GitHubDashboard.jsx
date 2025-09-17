@@ -302,7 +302,7 @@ const GitHubDashboard = memo(function GitHubDashboard({
       {githubWidgets.length === 0 ? (
         <div className="bg-gray-50 border-2 border-dashed border-gray-300 rounded-2xl p-12 text-center">
           <Github className="mx-auto w-16 h-16 text-gray-300 mb-4" />
-          <h3 className="text-xl font-semibold text-gray-800 mb-2">No GitHub Workflows Yet</h3>
+          <h3 className="text-xl font-semibold text-gray-800 mb-2">No GitHub Widgets Yet</h3>
           <p className="text-gray-600 mb-4">Create your first GitHub workflow to start tracking your repositories and development activities.</p>
           <button
             onClick={onShowModal}
