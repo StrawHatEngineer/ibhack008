@@ -1,10 +1,11 @@
 import { useState, useEffect, useRef } from "react";
 import { PlusCircle, RefreshCw, Mail, MessageSquare, Github, Plus, Settings, Sparkles } from "lucide-react";
 import WorkflowModal from "./WorkflowModal";
-import { getSavedWorkflows, updateWorkflowLastRun, saveWorkflow } from "../utils/workflowStorage";
+import { getSavedWorkflows, updateWorkflowLastRun, saveWorkflow, getCachedWorkflowResult, saveWorkflowResult, hasValidCache, clearExpiredResults } from "../utils/workflowStorage";
 import EmailDashboard from "./EmailDashboard";
 import SlackDashboard from "./SlackDashboard";
 import GitHubDashboard from "./GitHubDashboard";
+import { useActivity } from "../contexts/ActivityContext";
 
 // Custom Dashboard Component
 const CustomDashboard = ({ dashboardId, dashboardTitle, onShowModal, widgets, onUpdateWidget, onRunWorkflow }) => {
@@ -150,6 +151,7 @@ const DASHBOARD_TYPES = {
 };
 
 function Dashboard() {
+  const { updateWidgets } = useActivity();
 
   const [llmResponse, setLlmResponse] = useState([]);
   const [widgets, setWidgets] = useState([]);
@@ -168,7 +170,7 @@ function Dashboard() {
   
   // Default workflows that auto-load on page refresh
   const defaultWorkflows = [
-    { id: '01994cdb-9588-7c8a-ab7d-9f3f764ca29a', title: 'Important Emails' },
+    { id: '019956fa-eb1f-700b-8c47-a9ae53236c23', title: 'Important Emails' },
     { id: '01995274-54ce-79a3-97cc-43d301c90a6f', title: 'Follow Up Emails' }
   ];
   
@@ -244,6 +246,9 @@ function Dashboard() {
             llmResponse = parseLlmResponse(llmResponse);
             console.log(`${workflow.title} llm response:`, llmResponse);
             
+            // Save result to localStorage cache
+            saveWorkflowResult(workflow.id, llmResponse);
+            
             completedWorkflows.push({
               workflowId: workflow.id,
               title: workflow.title,
@@ -315,6 +320,14 @@ function Dashboard() {
       return; // Prevent multiple polling cycles
     }
     
+    // Check if all default workflows have valid cached results
+    const allCached = defaultWorkflows.every(workflow => hasValidCache(workflow.id));
+    
+    if (allCached) {
+      console.log('All default workflows have valid cached results, skipping polling...');
+      return;
+    }
+    
     isPollingRef.current = true;
     console.log('Starting default workflows polling cycle...');
     
@@ -342,19 +355,31 @@ function Dashboard() {
     loadSavedWorkflows();
   }, []);
 
+  // Update activity tracker whenever widgets change
+  useEffect(() => {
+    updateWidgets(widgets);
+  }, [widgets, updateWidgets]);
+
   const initializeDefaultWidgets = () => {
     const savedWorkflows = getSavedWorkflows();
     
-    // Create loading widgets for default workflows immediately
-    const defaultWidgets = defaultWorkflows.map((defaultWorkflow, index) => ({
-      id: index + 1,
-      title: defaultWorkflow.title,
-      content: "",
-      loading: true, // Start with loading state
-      workflowId: defaultWorkflow.id
-    }));
+    // Clear any expired results first
+    clearExpiredResults();
     
-    // Set the default widgets with loading states
+    // Create widgets for default workflows - check cache first
+    const defaultWidgets = defaultWorkflows.map((defaultWorkflow, index) => {
+      const cachedResult = getCachedWorkflowResult(defaultWorkflow.id);
+      
+      return {
+        id: index + 1,
+        title: defaultWorkflow.title,
+        content: cachedResult || "",
+        loading: !cachedResult, // Only loading if no cached result
+        workflowId: defaultWorkflow.id
+      };
+    });
+    
+    // Set the default widgets
     setWidgets(defaultWidgets);
     
     // Add all default workflows to storage if they don't exist
@@ -492,6 +517,9 @@ function Dashboard() {
               console.log('Formatted response:', llmResponse);
               const parsedResponse = parseLlmResponse(llmResponse);
               console.log('Parsed response:', parsedResponse);
+              
+              // Save result to localStorage cache
+              saveWorkflowResult(workflowId, parsedResponse);
               
               // Update the specific widget with new content using the callback form to get current state
               setWidgets(currentWidgets => {

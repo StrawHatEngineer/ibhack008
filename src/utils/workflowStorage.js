@@ -112,3 +112,131 @@ export const clearAllWorkflows = () => {
     console.error('Error clearing workflows:', error);
   }
 };
+
+// Workflow Results Caching
+const WORKFLOW_RESULTS_KEY = 'workflow_results';
+
+/**
+ * Get all cached workflow results from localStorage
+ * @returns {Object} Object with workflowId as keys and result data as values
+ */
+export const getWorkflowResults = () => {
+  try {
+    const stored = localStorage.getItem(WORKFLOW_RESULTS_KEY);
+    return stored ? JSON.parse(stored) : {};
+  } catch (error) {
+    console.error('Error reading workflow results from storage:', error);
+    return {};
+  }
+};
+
+/**
+ * Save workflow result to localStorage with expiration
+ * @param {String} workflowId - ID of the workflow
+ * @param {*} result - Result data to cache
+ * @param {Number} hoursToExpire - Hours until cache expires (default: 1 hour)
+ */
+export const saveWorkflowResult = (workflowId, result, hoursToExpire = 1) => {
+  try {
+    const existing = getWorkflowResults();
+    const expirationTime = new Date(Date.now() + hoursToExpire * 60 * 60 * 1000);
+    
+    const updated = {
+      ...existing,
+      [workflowId]: {
+        content: result,
+        timestamp: new Date().toISOString(),
+        expiresAt: expirationTime.toISOString()
+      }
+    };
+    
+    localStorage.setItem(WORKFLOW_RESULTS_KEY, JSON.stringify(updated));
+    console.log('Workflow result cached for:', workflowId);
+  } catch (error) {
+    console.error('Error saving workflow result:', error);
+  }
+};
+
+/**
+ * Get cached workflow result if it exists and hasn't expired
+ * @param {String} workflowId - ID of the workflow
+ * @returns {*|null} Cached result or null if not found/expired
+ */
+export const getCachedWorkflowResult = (workflowId) => {
+  try {
+    const results = getWorkflowResults();
+    const result = results[workflowId];
+    
+    if (!result) {
+      return null;
+    }
+    
+    // Check if result has expired
+    const now = new Date();
+    const expiresAt = new Date(result.expiresAt);
+    
+    if (now > expiresAt) {
+      // Result has expired, remove it
+      const updated = { ...results };
+      delete updated[workflowId];
+      localStorage.setItem(WORKFLOW_RESULTS_KEY, JSON.stringify(updated));
+      console.log('Expired cached result removed for:', workflowId);
+      return null;
+    }
+    
+    console.log('Using cached result for:', workflowId);
+    return result.content;
+  } catch (error) {
+    console.error('Error getting cached workflow result:', error);
+    return null;
+  }
+};
+
+/**
+ * Check if a workflow result is cached and valid
+ * @param {String} workflowId - ID of the workflow
+ * @returns {Boolean} True if cached and valid, false otherwise
+ */
+export const hasValidCache = (workflowId) => {
+  return getCachedWorkflowResult(workflowId) !== null;
+};
+
+/**
+ * Clear expired workflow results from cache
+ */
+export const clearExpiredResults = () => {
+  try {
+    const results = getWorkflowResults();
+    const now = new Date();
+    const updated = {};
+    let removedCount = 0;
+    
+    Object.entries(results).forEach(([workflowId, result]) => {
+      const expiresAt = new Date(result.expiresAt);
+      if (now <= expiresAt) {
+        updated[workflowId] = result;
+      } else {
+        removedCount++;
+      }
+    });
+    
+    if (removedCount > 0) {
+      localStorage.setItem(WORKFLOW_RESULTS_KEY, JSON.stringify(updated));
+      console.log(`Cleared ${removedCount} expired workflow results`);
+    }
+  } catch (error) {
+    console.error('Error clearing expired results:', error);
+  }
+};
+
+/**
+ * Clear all cached workflow results
+ */
+export const clearAllResults = () => {
+  try {
+    localStorage.removeItem(WORKFLOW_RESULTS_KEY);
+    console.log('Cleared all cached workflow results');
+  } catch (error) {
+    console.error('Error clearing workflow results:', error);
+  }
+};

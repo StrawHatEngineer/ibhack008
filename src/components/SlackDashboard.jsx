@@ -1,10 +1,11 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, memo } from "react";
 import { PlusCircle, RefreshCw, MessageSquare, Hash, User } from "lucide-react";
 import WorkflowModal from "./WorkflowModal";
 import { getSavedWorkflows, updateWorkflowLastRun, saveWorkflow } from "../utils/workflowStorage";
+import { useActivity } from "../contexts/ActivityContext";
 
-function SlackWidget({ title, content, loading, onContentUpdate, workflowId, onRunWorkflow }) {
-  const [readItems, setReadItems] = useState([]);
+const SlackWidget = memo(function SlackWidget({ title, content, loading, onContentUpdate, workflowId, onRunWorkflow }) {
+  const { markItemCompleted, isItemCompleted } = useActivity();
   const [isRunning, setIsRunning] = useState(false);
 
   const handleSlackClick = (link) => {
@@ -13,7 +14,12 @@ function SlackWidget({ title, content, loading, onContentUpdate, workflowId, onR
 
   const markAsRead = (index) => {
     console.log(`Slack message ${index} marked as read`);
-    setReadItems([...readItems, index]);
+    // Mark item as completed in activity tracker
+    markItemCompleted('slack', workflowId, index);
+  };
+
+  const isRead = (index) => {
+    return isItemCompleted('slack', workflowId, index);
   };
 
   const renderSlackContent = () => {
@@ -23,7 +29,7 @@ function SlackWidget({ title, content, loading, onContentUpdate, workflowId, onR
       return (
         <ul className="space-y-3 mr-4">
           {content.map((item, index) => {   
-            const isRead = readItems.includes(index);
+            const itemIsRead = isRead(index);
             if (typeof item === 'object' && item !== null) {
               const message = item['message'] || item.text || item.Message || 'No Message';
               const channel = item['channel'] || item.Channel || 'general';
@@ -35,7 +41,7 @@ function SlackWidget({ title, content, loading, onContentUpdate, workflowId, onR
                   <button
                     onClick={() => handleSlackClick(link)}
                     className={`text-left w-full p-3 text-sm border rounded-lg transition-all duration-200 ${
-                      isRead 
+                      itemIsRead 
                         ? 'bg-gray-50 border-gray-200 text-gray-500 line-through' 
                         : 'bg-white border-purple-200 text-purple-700 hover:bg-purple-50 hover:border-purple-300'
                     }`}
@@ -58,7 +64,7 @@ function SlackWidget({ title, content, loading, onContentUpdate, workflowId, onR
                     onClick={() => markAsRead(index)}
                     className="ml-2 text-sm text-green-600 hover:text-green-800 flex-shrink-0"
                   >
-                    <i className={`fa ${isRead ? 'fa-check' : ''} font-bold border-2 border-green-600 p-1 rounded ${isRead ? '' : 'w-6 h-6'}`}></i>
+                    <i className={`fa ${itemIsRead ? 'fa-check' : ''} font-bold border-2 border-green-600 p-1 rounded ${itemIsRead ? '' : 'w-6 h-6'}`}></i>
                   </button>
                 </li>
               );
@@ -68,7 +74,7 @@ function SlackWidget({ title, content, loading, onContentUpdate, workflowId, onR
                   <button
                     onClick={() => handleSlackClick('')}
                     className={`text-left w-full p-3 text-sm border rounded-lg transition-all duration-200 ${
-                      isRead 
+                      itemIsRead 
                         ? 'bg-gray-50 border-gray-200 text-gray-500 line-through' 
                         : 'bg-white border-purple-200 text-purple-700 hover:bg-purple-50 hover:border-purple-300'
                     }`}
@@ -82,7 +88,7 @@ function SlackWidget({ title, content, loading, onContentUpdate, workflowId, onR
                     onClick={() => markAsRead(index)}
                     className="ml-2 text-sm text-green-600 hover:text-green-800"
                   >
-                    <i className={`fa ${isRead ? 'fa-check' : ''} font-bold border-2 border-green-600 p-1 rounded ${isRead ? '' : 'w-6 h-6'}`}></i>
+                    <i className={`fa ${itemIsRead ? 'fa-check' : ''} font-bold border-2 border-green-600 p-1 rounded ${itemIsRead ? '' : 'w-6 h-6'}`}></i>
                   </button>
                 </li>
               );
@@ -108,7 +114,7 @@ function SlackWidget({ title, content, loading, onContentUpdate, workflowId, onR
             onClick={() => markAsRead(0)}
             className="ml-2 text-sm text-green-600 hover:text-green-800"
           >
-            <i className={`fa ${readItems.includes(0) ? 'fa-check' : ''} font-bold border-2 border-green-600 p-1 rounded ${readItems.includes(0) ? '' : 'w-6 h-6'}`}></i>
+            <i className={`fa ${isRead(0) ? 'fa-check' : ''} font-bold border-2 border-green-600 p-1 rounded ${isRead(0) ? '' : 'w-6 h-6'}`}></i>
           </button>
         </div>
       );
@@ -116,7 +122,7 @@ function SlackWidget({ title, content, loading, onContentUpdate, workflowId, onR
       return (
         <ul className="space-y-2">
           {content.split('\n').map((item, index) => {
-            const isRead = readItems.includes(index);
+            const itemIsRead = isRead(index);
             return (
               <li key={index} className="flex justify-between items-center">
                 <button
@@ -193,9 +199,9 @@ function SlackWidget({ title, content, loading, onContentUpdate, workflowId, onR
       </div>
     </div>
   );
-}
+});
 
-function SlackDashboard({ 
+const SlackDashboard = memo(function SlackDashboard({ 
   widgets, 
   onUpdateWidget, 
   onRunWorkflow, 
@@ -255,6 +261,7 @@ function SlackDashboard({
       )}
     </div>
   );
-}
+});
+
 
 export default SlackDashboard;

@@ -1,10 +1,11 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, memo } from "react";
 import { PlusCircle, RefreshCw, Github, GitPullRequest, GitCommit, Star, Bug } from "lucide-react";
 import WorkflowModal from "./WorkflowModal";
 import { getSavedWorkflows, updateWorkflowLastRun, saveWorkflow } from "../utils/workflowStorage";
+import { useActivity } from "../contexts/ActivityContext";
 
-function GitHubWidget({ title, content, loading, onContentUpdate, workflowId, onRunWorkflow }) {
-  const [readItems, setReadItems] = useState([]);
+const GitHubWidget = memo(function GitHubWidget({ title, content, loading, onContentUpdate, workflowId, onRunWorkflow }) {
+  const { markItemCompleted, isItemCompleted } = useActivity();
   const [isRunning, setIsRunning] = useState(false);
 
   const handleGitHubClick = (link) => {
@@ -13,7 +14,12 @@ function GitHubWidget({ title, content, loading, onContentUpdate, workflowId, on
 
   const markAsRead = (index) => {
     console.log(`GitHub item ${index} marked as read`);
-    setReadItems([...readItems, index]);
+    // Mark item as completed in activity tracker
+    markItemCompleted('github', workflowId, index);
+  };
+
+  const isRead = (index) => {
+    return isItemCompleted('github', workflowId, index);
   };
 
   const getItemIcon = (item) => {
@@ -41,7 +47,7 @@ function GitHubWidget({ title, content, loading, onContentUpdate, workflowId, on
       return (
         <ul className="space-y-3 mr-4">
           {content.map((item, index) => {   
-            const isRead = readItems.includes(index);
+            const itemIsRead = isRead(index);
             if (typeof item === 'object' && item !== null) {
               const title = item['title'] || item.Title || item.subject || 'No Title';
               const repository = item['repository'] || item.repo || item.Repository || 'Unknown Repo';
@@ -54,7 +60,7 @@ function GitHubWidget({ title, content, loading, onContentUpdate, workflowId, on
                   <button
                     onClick={() => handleGitHubClick(link)}
                     className={`text-left w-full p-3 text-sm border rounded-lg transition-all duration-200 ${
-                      isRead 
+                      itemIsRead 
                         ? 'bg-gray-50 border-gray-200 text-gray-500 line-through' 
                         : 'bg-white border-gray-300 text-gray-700 hover:bg-gray-50 hover:border-gray-400'
                     }`}
@@ -78,7 +84,7 @@ function GitHubWidget({ title, content, loading, onContentUpdate, workflowId, on
                     onClick={() => markAsRead(index)}
                     className="ml-2 text-sm text-green-600 hover:text-green-800 flex-shrink-0"
                   >
-                    <i className={`fa ${isRead ? 'fa-check' : ''} font-bold border-2 border-green-600 p-1 rounded ${isRead ? '' : 'w-6 h-6'}`}></i>
+                    <i className={`fa ${itemIsRead ? 'fa-check' : ''} font-bold border-2 border-green-600 p-1 rounded ${itemIsRead ? '' : 'w-6 h-6'}`}></i>
                   </button>
                 </li>
               );
@@ -88,7 +94,7 @@ function GitHubWidget({ title, content, loading, onContentUpdate, workflowId, on
                   <button
                     onClick={() => handleGitHubClick('')}
                     className={`text-left w-full p-3 text-sm border rounded-lg transition-all duration-200 ${
-                      isRead 
+                      itemIsRead 
                         ? 'bg-gray-50 border-gray-200 text-gray-500 line-through' 
                         : 'bg-white border-gray-300 text-gray-700 hover:bg-gray-50 hover:border-gray-400'
                     }`}
@@ -102,7 +108,7 @@ function GitHubWidget({ title, content, loading, onContentUpdate, workflowId, on
                     onClick={() => markAsRead(index)}
                     className="ml-2 text-sm text-green-600 hover:text-green-800"
                   >
-                    <i className={`fa ${isRead ? 'fa-check' : ''} font-bold border-2 border-green-600 p-1 rounded ${isRead ? '' : 'w-6 h-6'}`}></i>
+                    <i className={`fa ${itemIsRead ? 'fa-check' : ''} font-bold border-2 border-green-600 p-1 rounded ${itemIsRead ? '' : 'w-6 h-6'}`}></i>
                   </button>
                 </li>
               );
@@ -128,7 +134,7 @@ function GitHubWidget({ title, content, loading, onContentUpdate, workflowId, on
             onClick={() => markAsRead(0)}
             className="ml-2 text-sm text-green-600 hover:text-green-800"
           >
-            <i className={`fa ${readItems.includes(0) ? 'fa-check' : ''} font-bold border-2 border-green-600 p-1 rounded ${readItems.includes(0) ? '' : 'w-6 h-6'}`}></i>
+            <i className={`fa ${isRead(0) ? 'fa-check' : ''} font-bold border-2 border-green-600 p-1 rounded ${isRead(0) ? '' : 'w-6 h-6'}`}></i>
           </button>
         </div>
       );
@@ -136,7 +142,7 @@ function GitHubWidget({ title, content, loading, onContentUpdate, workflowId, on
       return (
         <ul className="space-y-2">
           {content.split('\n').map((item, index) => {
-            const isRead = readItems.includes(index);
+            const itemIsRead = isRead(index);
             return (
               <li key={index} className="flex justify-between items-center">
                 <button
@@ -213,9 +219,9 @@ function GitHubWidget({ title, content, loading, onContentUpdate, workflowId, on
       </div>
     </div>
   );
-}
+});
 
-function GitHubDashboard({ 
+const GitHubDashboard = memo(function GitHubDashboard({ 
   widgets, 
   onUpdateWidget, 
   onRunWorkflow, 
@@ -278,6 +284,6 @@ function GitHubDashboard({
       )}
     </div>
   );
-}
+});
 
 export default GitHubDashboard;

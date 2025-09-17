@@ -1,112 +1,15 @@
 import { useState, useEffect } from "react";
 import { BarChart3, TrendingUp, CheckCircle2, Clock, Mail, MessageSquare, Github, Sparkles, Calendar, Target } from "lucide-react";
-
-// Mock data for demo purposes - in real app this would come from your data store
-const getMockWidgetData = () => [
-  {
-    id: 1,
-    title: "Important Emails",
-    content: new Array(15).fill(null).map((_, i) => ({ subject: `Email ${i + 1}`, sender: `sender${i + 1}@email.com` })),
-    type: 'email'
-  },
-  {
-    id: 2,
-    title: "Follow Up Emails", 
-    content: new Array(8).fill(null).map((_, i) => ({ subject: `Follow up ${i + 1}`, sender: `contact${i + 1}@company.com` })),
-    type: 'email'
-  },
-  {
-    id: 3,
-    title: "Slack Messages",
-    content: new Array(22).fill(null).map((_, i) => ({ message: `Slack message ${i + 1}`, channel: 'general', user: `user${i + 1}` })),
-    type: 'slack'
-  },
-  {
-    id: 4,
-    title: "GitHub Issues",
-    content: new Array(12).fill(null).map((_, i) => ({ title: `Issue ${i + 1}`, repo: 'project-repo', type: 'bug' })),
-    type: 'github'
-  },
-  {
-    id: 5,
-    title: "Custom Tasks",
-    content: new Array(6).fill(null).map((_, i) => ({ task: `Custom task ${i + 1}`, priority: 'medium' })),
-    type: 'custom'
-  }
-];
+import { useActivity } from "../contexts/ActivityContext";
+import { clearExpiredResults } from "../utils/workflowStorage";
 
 const ActivityTracker = () => {
-  const [activityStats, setActivityStats] = useState({
-    totalTasks: 0,
-    completedTasks: 0,
-    emailTasks: 0,
-    slackTasks: 0,
-    githubTasks: 0,
-    customTasks: 0,
-    completionRate: 0,
-    todayCompleted: 0,
-    thisWeekCompleted: 0,
-    totalDashboards: 3
-  });
-
+  const { activityStats, resetCompletedItems } = useActivity();
   const [timeRange, setTimeRange] = useState('today'); // today, week, month
 
-  // Calculate activity statistics
-  const calculateActivityStats = () => {
-    const widgets = getMockWidgetData();
-    let totalTasks = 0;
-    let completedTasks = 0;
-    let emailTasks = 0;
-    let slackTasks = 0;
-    let githubTasks = 0;
-    let customTasks = 0;
-
-    widgets.forEach(widget => {
-      if (widget.content && Array.isArray(widget.content)) {
-        const taskCount = widget.content.length;
-        totalTasks += taskCount;
-
-        // Categorize by type
-        switch (widget.type) {
-          case 'email':
-            emailTasks += taskCount;
-            break;
-          case 'slack':
-            slackTasks += taskCount;
-            break;
-          case 'github':
-            githubTasks += taskCount;
-            break;
-          case 'custom':
-            customTasks += taskCount;
-            break;
-        }
-
-        // Mock completion rate (40-80% for demo)
-        completedTasks += Math.floor(taskCount * (Math.random() * 0.4 + 0.4));
-      }
-    });
-
-    const completionRate = totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0;
-    const todayCompleted = Math.floor(completedTasks * 0.3);
-    const thisWeekCompleted = Math.floor(completedTasks * 0.7);
-
-    setActivityStats({
-      totalTasks,
-      completedTasks,
-      emailTasks,
-      slackTasks,
-      githubTasks,
-      customTasks,
-      completionRate,
-      todayCompleted,
-      thisWeekCompleted,
-      totalDashboards: 3
-    });
-  };
-
+  // Clean up expired cache when component loads
   useEffect(() => {
-    calculateActivityStats();
+    clearExpiredResults();
   }, []);
 
   const StatCard = ({ icon: Icon, title, value, subtitle, color = "bg-blue-500", trend = null }) => (
@@ -318,11 +221,17 @@ const ActivityTracker = () => {
         <div className="mt-8 bg-white rounded-lg p-6 shadow-md">
           <h2 className="text-xl font-semibold text-gray-900 mb-4">Quick Actions</h2>
           <div className="flex flex-wrap gap-3">
-            <button className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors">
+            <button 
+              onClick={() => window.location.reload()}
+              className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors"
+            >
               Refresh Data
             </button>
-            <button className="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors">
-              Mark All Read
+            <button 
+              onClick={resetCompletedItems}
+              className="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors"
+            >
+              Reset Progress
             </button>
             <button className="bg-purple-500 hover:bg-purple-600 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors">
               Export Report

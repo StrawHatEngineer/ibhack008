@@ -1,10 +1,11 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, memo } from "react";
 import { PlusCircle, RefreshCw, Mail } from "lucide-react";
 import WorkflowModal from "./WorkflowModal";
 import { getSavedWorkflows, updateWorkflowLastRun, saveWorkflow } from "../utils/workflowStorage";
+import { useActivity } from "../contexts/ActivityContext";
 
-function EmailWidget({ title, content, loading, onContentUpdate, workflowId, onRunWorkflow }) {
-  const [readItems, setReadItems] = useState([]);
+const EmailWidget = memo(function EmailWidget({ title, content, loading, onContentUpdate, workflowId, onRunWorkflow }) {
+  const { markItemCompleted, isItemCompleted } = useActivity();
   const [isRunning, setIsRunning] = useState(false);
 
   const handleEmailClick = (link) => {
@@ -13,19 +14,22 @@ function EmailWidget({ title, content, loading, onContentUpdate, workflowId, onR
 
   const markAsRead = (index) => {
     console.log(`Email ${index} marked as read`);
-    setReadItems([...readItems, index]);
+    // Mark item as completed in activity tracker
+    markItemCompleted('email', workflowId, index);
+  };
+
+  const isRead = (index) => {
+    return isItemCompleted('email', workflowId, index);
   };
 
   const renderEmailContent = () => {
-    console.log(`EmailWidget ${title} - Loading:`, loading, 'Content:', content);
-    
     if (loading) return "Loading emails...";
     
     if (Array.isArray(content) && content.length > 0) {
       return (
         <ul className="space-y-2 mr-4 ms-4">
           {content.map((item, index) => {   
-            const isRead = readItems.includes(index);
+            const itemIsRead = isRead(index);
             if (typeof item === 'object' && item !== null) {
               const emailSubject = item['subject'] || item.subject || item.Subject || 'No Subject';
               const sender = item['sender'] || item.from || item.From || 'Unknown Sender';
@@ -36,7 +40,7 @@ function EmailWidget({ title, content, loading, onContentUpdate, workflowId, onR
                   <button
                     onClick={() => handleEmailClick(link)}
                     className={`text-left w-full p-3 text-sm border overflow-hidden rounded-lg transition-all duration-200 ${
-                      isRead 
+                      itemIsRead 
                         ? 'bg-gray-50 border-gray-200 text-gray-500 line-through' 
                         : 'bg-white border-blue-200 text-blue-700 hover:bg-blue-50 hover:border-blue-300'
                     }`}
@@ -52,7 +56,7 @@ function EmailWidget({ title, content, loading, onContentUpdate, workflowId, onR
                     onClick={() => markAsRead(index)}
                     className="ml-2 text-sm text-green-600 hover:text-green-800 flex-shrink-0"
                   >
-                    <i className={`fa ${isRead ? 'fa-check' : ''} font-bold border-2 border-green-600 p-1 rounded ${isRead ? '' : 'w-6 h-6'}`}></i>
+                    <i className={`fa ${itemIsRead ? 'fa-check' : ''} font-bold border-2 border-green-600 p-1 rounded ${itemIsRead ? '' : 'w-6 h-6'}`}></i>
                   </button>
                 </li>
               );
@@ -76,7 +80,7 @@ function EmailWidget({ title, content, loading, onContentUpdate, workflowId, onR
                     onClick={() => markAsRead(index)}
                     className="ml-2 text-sm text-green-600 hover:text-green-800"
                   >
-                    <i className={`fa ${isRead ? 'fa-check' : ''} font-bold border-2 border-green-600 p-1 rounded ${isRead ? '' : 'w-6 h-6'}`}></i>
+                    <i className={`fa ${itemIsRead ? 'fa-check' : ''} font-bold border-2 border-green-600 p-1 rounded ${itemIsRead ? '' : 'w-6 h-6'}`}></i>
                   </button>
                 </li>
               );
@@ -102,7 +106,7 @@ function EmailWidget({ title, content, loading, onContentUpdate, workflowId, onR
             onClick={() => markAsRead(0)}
             className="ml-2 text-sm text-green-600 hover:text-green-800"
           >
-            <i className={`fa ${readItems.includes(0) ? 'fa-check' : ''} font-bold border-2 border-green-600 p-1 rounded ${readItems.includes(0) ? '' : 'w-6 h-6'}`}></i>
+            <i className={`fa ${isRead(0) ? 'fa-check' : ''} font-bold border-2 border-green-600 p-1 rounded ${isRead(0) ? '' : 'w-6 h-6'}`}></i>
           </button>
         </div>
       );
@@ -110,13 +114,13 @@ function EmailWidget({ title, content, loading, onContentUpdate, workflowId, onR
       return (
         <ul className="space-y-2">
           {content.split('\n').map((item, index) => {
-            const isRead = readItems.includes(index);
+            const itemIsRead = isRead(index);
             return (
               <li key={index} className="flex justify-between items-center">
                 <button
                   onClick={() => handleEmailClick('')}
                   className={`text-left w-full p-3 text-sm border rounded-lg transition-all duration-200 ${
-                    isRead 
+                    itemIsRead 
                       ? 'bg-gray-50 border-gray-200 text-gray-500 line-through' 
                       : 'bg-white border-blue-200 text-blue-700 hover:bg-blue-50 hover:border-blue-300'
                   }`}
@@ -187,9 +191,9 @@ function EmailWidget({ title, content, loading, onContentUpdate, workflowId, onR
       </div>
     </div>
   );
-}
+});
 
-function EmailDashboard({ 
+const EmailDashboard = memo(function EmailDashboard({ 
   widgets, 
   onUpdateWidget, 
   onRunWorkflow, 
@@ -203,9 +207,6 @@ function EmailDashboard({
     widget.title.toLowerCase().includes('mail')
   );
 
-  // Debug logging
-  console.log('EmailDashboard - All widgets:', widgets);
-  console.log('EmailDashboard - Filtered email widgets:', emailWidgets);
 
   return (
     <div className="mb-8">
@@ -252,6 +253,6 @@ function EmailDashboard({
       )}
     </div>
   );
-}
+});
 
 export default EmailDashboard;
