@@ -6,7 +6,8 @@ const DASHBOARDS_KEY = 'custom_dashboards';
 const DEFAULT_DASHBOARDS = [
   { id: 'dashboard-1', type: 'email', title: 'Email Management', isDefault: true },
   { id: 'dashboard-2', type: 'github', title: 'GitHub Management', isDefault: true },
-  { id: 'dashboard-3', type: 'slack', title: 'Slack Management', isDefault: true }
+  { id: 'dashboard-3', type: 'slack', title: 'Slack Management', isDefault: true },
+  { id: 'dashboard-4', type: 'aihub', title: 'AI Hub Dashboard', isDefault: true }
 ];
 
 /**

@@ -13,6 +13,9 @@ const DEFAULT_CONNECTIONS = {
   slack: [
     { id: 'slack', name: 'Slack', icon: '💬', color: 'bg-purple-500', connected: true },
   ],
+  aihub: [
+    { id: 'aihub', name: 'AI Hub', icon: '🤖', color: 'bg-gradient-to-r from-blue-500 to-cyan-500', connected: true },
+  ],
   custom: [
   ]
 };
