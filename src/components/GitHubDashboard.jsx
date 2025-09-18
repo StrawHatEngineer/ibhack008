@@ -237,8 +237,7 @@ const GitHubWidget = memo(function GitHubWidget({ title, content, loading, onCon
                   : 'bg-gray-800 text-white hover:bg-gray-900'
               }`}
             >
-              <RefreshCw className={`mr-1 w-4 h-4 ${isRunning ? 'animate-spin' : ''}`} />
-              {isRunning ? 'Refreshing...' : 'Refresh'}
+              <RefreshCw className={`w-4 h-4 ${isRunning ? 'animate-spin' : ''}`} />
             </button>
           )}
           {onDeleteWidget && (

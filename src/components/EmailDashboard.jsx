@@ -207,8 +207,7 @@ const EmailWidget = memo(function EmailWidget({ title, content, loading, onConte
                 : 'bg-blue-600 text-white hover:bg-blue-700'
             }`}
           >
-            <RefreshCw className={`mr-1 w-4 h-4 ${isRunning ? 'animate-spin' : ''}`} />
-            {isRunning ? 'Refreshing...' : 'Refresh'}
+            <RefreshCw className={`w-4 h-4 ${isRunning ? 'animate-spin' : ''}`} />
           </button>
           )}
           {onDeleteWidget && (
