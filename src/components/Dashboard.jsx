@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { PlusCircle, RefreshCw, Mail, MessageSquare, Github, Plus, Settings, Sparkles, X } from "lucide-react";
 import WorkflowModal from "./WorkflowModal";
-import { getSavedWorkflows, updateWorkflowLastRun, saveWorkflow, getCachedWorkflowResult, saveWorkflowResult, hasValidCache, clearExpiredResults } from "../utils/workflowStorage";
+import { getSavedWorkflows, updateWorkflowLastRun, saveWorkflow, getCachedWorkflowResult, saveWorkflowResult, hasValidCache, clearExpiredResults, deleteWorkflow } from "../utils/workflowStorage";
 import EmailDashboard from "./EmailDashboard";
 import SlackDashboard from "./SlackDashboard";
 import GitHubDashboard from "./GitHubDashboard";
@@ -504,6 +504,28 @@ function Dashboard() {
     ));
   };
 
+  const deleteWidget = (widgetId) => {
+    // Find the widget to get its workflowId
+    const widgetToDelete = widgets.find(widget => widget.id === widgetId);
+    
+    if (widgetToDelete && widgetToDelete.workflowId) {
+      // Delete from storage if it's not a default workflow
+      const defaultWorkflowIds = defaultWorkflows.map(w => w.id);
+      if (!defaultWorkflowIds.includes(widgetToDelete.workflowId)) {
+        try {
+          deleteWorkflow(widgetToDelete.workflowId);
+          console.log('Deleted workflow from storage:', widgetToDelete.workflowId);
+        } catch (error) {
+          console.error('Error deleting workflow from storage:', error);
+        }
+      }
+    }
+    
+    // Remove widget from state
+    setWidgets(widgets.filter(widget => widget.id !== widgetId));
+    console.log('Widget deleted:', widgetId);
+  };
+
   const runIndividualWorkflow = async (workflowId) => {
     try {
       // Update last run timestamp in storage
@@ -827,6 +849,7 @@ function Dashboard() {
                 <DashboardComponent 
                   widgets={widgets}
                   onUpdateWidget={updateWidgetContent}
+                  onDeleteWidget={deleteWidget}
                   onRunWorkflow={runIndividualWorkflow}
                   onShowModal={() => handleShowModal(dashboard.id, dashboard.type)}
                   onShowConnectionsModal={() => handleShowConnectionsModal(dashboard.id, dashboard.type, dashboard.title)}

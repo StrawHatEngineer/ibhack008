@@ -13,6 +13,7 @@ const extractShortTitle = (prompt, maxLength = 100) => {
 
 export default function WorkflowModal({ isOpen, onClose, onWorkflowComplete, dashboardId, dashboardType }) {
   const [step, setStep] = useState("initial");
+  const [widgetName, setWidgetName] = useState("");
   const [initialPrompt, setInitialPrompt] = useState("");
   const [userInput, setUserInput] = useState("");
   const [workflowId, setWorkflowId] = useState("");
@@ -64,6 +65,7 @@ export default function WorkflowModal({ isOpen, onClose, onWorkflowComplete, das
 
   const resetModal = () => {
     setStep("initial");
+    setWidgetName("");
     setInitialPrompt("");
     setUserInput("");
     setWorkflowId("");
@@ -113,7 +115,7 @@ export default function WorkflowModal({ isOpen, onClose, onWorkflowComplete, das
       try {
         saveWorkflow({
           id: newWorkflowId,
-          title: extractShortTitle(prompt),
+          title: widgetName,
           createdAt: new Date().toISOString(),
           dashboardId: dashboardId || null,
           dashboardType: dashboardType || null
@@ -481,6 +483,10 @@ export default function WorkflowModal({ isOpen, onClose, onWorkflowComplete, das
   };
 
   const handleInitialSubmit = () => {
+    if (!widgetName.trim()) {
+      setError("Please enter a widget name");
+      return;
+    }
     if (!initialPrompt.trim()) {
       setError("Please enter an initial prompt");
       return;
@@ -506,7 +512,7 @@ export default function WorkflowModal({ isOpen, onClose, onWorkflowComplete, das
         <div className="flex justify-between items-center p-6 border-b">
           <h2 className="text-xl font-bold text-gray-900">
             {step === "initial" && "Create New Widget"}
-            {step === "streaming" && "Widget Running..."}
+            {step === "streaming" && "Creating Widget..."}
             {step === "waiting_input" && "Input Required"}
             {step === "completed" && "Widget Completed"}
             {step === "error" && "Error"}
@@ -523,6 +529,19 @@ export default function WorkflowModal({ isOpen, onClose, onWorkflowComplete, das
         <div className="flex-1 p-6 overflow-auto flex flex-col">
           {step === "initial" && (
             <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Widget Name
+                </label>
+                <input
+                  type="text"
+                  value={widgetName}
+                  onChange={(e) => setWidgetName(e.target.value)}
+                  placeholder="Enter a name for your widget (e.g., 'Recent Important Emails')"
+                  className="w-full border border-gray-300 rounded-lg p-3 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  disabled={loading}
+                />
+              </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   Initial Prompt
@@ -552,7 +571,7 @@ export default function WorkflowModal({ isOpen, onClose, onWorkflowComplete, das
                 </button>
                 <button
                   onClick={handleInitialSubmit}
-                  disabled={loading || !initialPrompt.trim()}
+                  disabled={loading || !widgetName.trim() || !initialPrompt.trim()}
                   className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center"
                 >
                   {loading ? (
@@ -563,7 +582,7 @@ export default function WorkflowModal({ isOpen, onClose, onWorkflowComplete, das
                   ) : (
                     <>
                       <Send className="mr-2" size={16} />
-                      Start Workflow
+                      Start Widget
                     </>
                   )}
                 </button>

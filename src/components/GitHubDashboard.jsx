@@ -4,7 +4,7 @@ import WorkflowModal from "./WorkflowModal";
 import { getSavedWorkflows, updateWorkflowLastRun, saveWorkflow } from "../utils/workflowStorage";
 import { useActivity } from "../contexts/ActivityContext";
 
-const GitHubWidget = memo(function GitHubWidget({ title, content, loading, onContentUpdate, workflowId, onRunWorkflow }) {
+const GitHubWidget = memo(function GitHubWidget({ title, content, loading, onContentUpdate, workflowId, onRunWorkflow, onDeleteWidget, widgetId }) {
   const { markItemCompleted, isItemCompleted } = useActivity();
   const [isRunning, setIsRunning] = useState(false);
 
@@ -199,20 +199,31 @@ const GitHubWidget = memo(function GitHubWidget({ title, content, loading, onCon
           <Github className="mr-2 w-5 h-5" />
           {title}
         </h2>
-        {workflowId && (
-          <button
-            onClick={handleRunWorkflow}
-            disabled={isRunning || loading}
-            className={`flex items-center px-3 py-2 rounded-md text-sm transition-colors ${
-              isRunning || loading
-                ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                : 'bg-gray-800 text-white hover:bg-gray-900'
-            }`}
-          >
-            <RefreshCw className={`mr-1 w-4 h-4 ${isRunning ? 'animate-spin' : ''}`} />
-            {isRunning ? 'Refreshing...' : 'Refresh'}
-          </button>
-        )}
+        <div className="flex items-center gap-2">
+          {workflowId && (
+            <button
+              onClick={handleRunWorkflow}
+              disabled={isRunning || loading}
+              className={`flex items-center px-3 py-2 rounded-md text-sm transition-colors ${
+                isRunning || loading
+                  ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                  : 'bg-gray-800 text-white hover:bg-gray-900'
+              }`}
+            >
+              <RefreshCw className={`mr-1 w-4 h-4 ${isRunning ? 'animate-spin' : ''}`} />
+              {isRunning ? 'Refreshing...' : 'Refresh'}
+            </button>
+          )}
+          {onDeleteWidget && (
+            <button
+              onClick={() => onDeleteWidget(widgetId)}
+              className="flex items-center px-2 py-2 rounded-md text-sm bg-red-600 text-white hover:bg-red-700 transition-colors"
+              title="Delete Widget"
+            >
+              <X className="w-4 h-4" />
+            </button>
+          )}
+        </div>
       </div>
       <div className="flex-1 overflow-auto text-sm text-gray-700">
         {loading || isRunning ? "Loading GitHub activities..." : renderGitHubContent()}
@@ -224,6 +235,7 @@ const GitHubWidget = memo(function GitHubWidget({ title, content, loading, onCon
 const GitHubDashboard = memo(function GitHubDashboard({ 
   widgets, 
   onUpdateWidget, 
+  onDeleteWidget,
   onRunWorkflow, 
   onShowModal,
   onShowConnectionsModal,
@@ -309,7 +321,9 @@ const GitHubDashboard = memo(function GitHubDashboard({
               content={widget.content} 
               loading={widget.loading} 
               workflowId={widget.workflowId}
+              widgetId={widget.id}
               onContentUpdate={(newContent) => onUpdateWidget(widget.id, newContent)}
+              onDeleteWidget={onDeleteWidget}
               onRunWorkflow={onRunWorkflow}
             />
           ))}
