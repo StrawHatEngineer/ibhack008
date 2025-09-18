@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { PlusCircle, RefreshCw, Mail, MessageSquare, Github, Plus, Settings, Sparkles } from "lucide-react";
+import { PlusCircle, RefreshCw, Mail, MessageSquare, Github, Plus, Settings, Sparkles, X } from "lucide-react";
 import WorkflowModal from "./WorkflowModal";
 import { getSavedWorkflows, updateWorkflowLastRun, saveWorkflow, getCachedWorkflowResult, saveWorkflowResult, hasValidCache, clearExpiredResults } from "../utils/workflowStorage";
 import EmailDashboard from "./EmailDashboard";
@@ -10,7 +10,7 @@ import { useActivity } from "../contexts/ActivityContext";
 import { getConnectedTools } from "../utils/connectionsStorage";
 
 // Custom Dashboard Component
-const CustomDashboard = ({ dashboardId, dashboardTitle, onShowModal, onShowConnectionsModal, widgets, onUpdateWidget, onRunWorkflow, connectedTools }) => {
+const CustomDashboard = ({ dashboardId, dashboardTitle, onShowModal, onShowConnectionsModal, widgets, onUpdateWidget, onRunWorkflow, connectedTools, onRemoveDashboard, canRemove }) => {
   const [customTitle, setCustomTitle] = useState(dashboardTitle || 'Custom Dashboard');
   const [isEditing, setIsEditing] = useState(false);
 
@@ -46,29 +46,6 @@ const CustomDashboard = ({ dashboardId, dashboardTitle, onShowModal, onShowConne
                 {customTitle}
               </h2>
             )}
-            {/* Connection indicators */}
-            <div className="flex items-center space-x-1 mt-1">
-              {connectedTools && connectedTools.length > 0 ? (
-                <>
-                  {connectedTools.slice(0, 3).map((tool) => (
-                    <div
-                      key={tool.id}
-                      className={`w-6 h-6 rounded-full ${tool.color} flex items-center justify-center text-xs text-white`}
-                      title={tool.name}
-                    >
-                      {tool.icon}
-                    </div>
-                  ))}
-                  {connectedTools.length > 3 && (
-                    <div className="w-6 h-6 rounded-full bg-gray-400 flex items-center justify-center text-xs text-white">
-                      +{connectedTools.length - 3}
-                    </div>
-                  )}
-                </>
-              ) : (
-                <span className="text-xs text-gray-500">No connections</span>
-              )}
-            </div>
           </div>
           <button
             onClick={() => setIsEditing(true)}
@@ -94,6 +71,16 @@ const CustomDashboard = ({ dashboardId, dashboardTitle, onShowModal, onShowConne
             <Plus className="h-4 w-4" />
             <span>Add Widget</span>
           </button>
+          {canRemove && (
+            <button
+              onClick={onRemoveDashboard}
+              className="bg-red-500 hover:bg-red-600 text-white px-3 py-2 rounded-lg flex items-center space-x-2 transition-colors"
+              title="Close Dashboard"
+            >
+              <X className="h-4 w-4" />
+              <span className="hidden sm:inline">Close</span>
+            </button>
+          )}
         </div>
       </div>
 
@@ -215,8 +202,11 @@ function Dashboard() {
   
   // Default workflows that auto-load on page refresh
   const defaultWorkflows = [
-    { id: '019956fa-eb1f-700b-8c47-a9ae53236c23', title: 'Important Emails' },
-    { id: '01995738-d264-700b-8d31-e9342843f854', title: 'Follow Up Emails' }
+    { id: '019956fa-eb1f-700b-8c47-a9ae53236c23', title: 'Important Emails', dashboardType: 'email' },
+    { id: '01995738-d264-700b-8d31-e9342843f854', title: 'Follow Up Emails', dashboardType: 'email' },
+    { id: '01995bcf-929f-78e3-bc98-38da52f3a11c', title: 'PRs you need to Review', dashboardType: 'github' },
+    { id: '01995bd3-a553-78e3-a05e-6cf0ab94d14d', title: 'PRs you raised', dashboardType: 'github' },
+    { id: '01995b71-bdbb-78e3-949d-51f2df429e8a', title: 'Follow-Up slack messages', dashboardType: 'slack' }
   ];
   
   function parseLlmResponse(llmResponse) {
@@ -427,13 +417,23 @@ function Dashboard() {
     const defaultWidgets = defaultWorkflows.map((defaultWorkflow, index) => {
       const cachedResult = getCachedWorkflowResult(defaultWorkflow.id);
       
+      // Assign to appropriate dashboard based on type
+      let dashboardId = null;
+      if (defaultWorkflow.dashboardType === 'email') {
+        dashboardId = 'dashboard-1'; // Email dashboard
+      } else if (defaultWorkflow.dashboardType === 'github') {
+        dashboardId = 'dashboard-2'; // GitHub dashboard
+      } else if (defaultWorkflow.dashboardType === 'slack') {
+        dashboardId = 'dashboard-3'; // Slack dashboard
+      }
+      
       return {
         id: index + 1,
         title: defaultWorkflow.title,
         content: cachedResult || "",
         loading: !cachedResult, // Only loading if no cached result
         workflowId: defaultWorkflow.id,
-        dashboardId: null // Default widgets are not assigned to specific dashboards initially
+        dashboardId: dashboardId
       };
     });
     
@@ -449,7 +449,8 @@ function Dashboard() {
           id: defaultWorkflow.id,
           title: defaultWorkflow.title,
           createdAt: new Date().toISOString(),
-          lastRun: null
+          lastRun: null,
+          dashboardType: defaultWorkflow.dashboardType
         };
         
         try {
@@ -734,9 +735,6 @@ function Dashboard() {
     return (
       <div className="bg-white rounded-lg border-2 border-dashed border-gray-300 p-8">
         <div className="text-center mb-6">
-          <div className="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-gray-100 mb-4">
-            <Plus className="h-6 w-6 text-gray-600" />
-          </div>
           <h3 className="text-lg font-medium text-gray-900 mb-2">Add New Dashboard</h3>
           <p className="text-gray-500">Choose a dashboard type to get started</p>
         </div>
@@ -825,7 +823,7 @@ function Dashboard() {
             const DashboardComponent = dashboardConfig.component;
             
             return (
-              <div key={dashboard.id} className="relative">
+              <div key={dashboard.id}>
                 <DashboardComponent 
                   widgets={widgets}
                   onUpdateWidget={updateWidgetContent}
@@ -837,20 +835,9 @@ function Dashboard() {
                   dashboardId={dashboard.id}
                   dashboardTitle={dashboard.title}
                   connectedTools={dashboardConnections[dashboard.type] || []}
+                  onRemoveDashboard={() => removeDashboard(dashboard.id)}
+                  canRemove={activeDashboards.length > 1}
                 />
-                
-                {/* Remove dashboard button */}
-                {activeDashboards.length > 1 && (
-                  <button
-                    onClick={() => removeDashboard(dashboard.id)}
-                    className="absolute -top-2 -right-2 bg-red-500 hover:bg-red-600 text-white p-1.5 rounded-full shadow-md transition-colors duration-200 z-10"
-                    title="Remove Dashboard"
-                  >
-                    <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                    </svg>
-                  </button>
-                )}
               </div>
             );
           })}

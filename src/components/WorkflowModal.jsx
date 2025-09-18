@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from "react";
 import { X, Send, MessageCircle, Loader } from "lucide-react";
 import { saveWorkflow } from "../utils/workflowStorage";
+import { getConnectedTools } from "../utils/connectionsStorage";
 
 // Utility function to extract first 100 characters from prompt for title
 const extractShortTitle = (prompt, maxLength = 100) => {
@@ -22,6 +23,7 @@ export default function WorkflowModal({ isOpen, onClose, onWorkflowComplete, das
   const messagesContainerRef = useRef(null);
   const [isUserScrolling, setIsUserScrolling] = useState(false);
   const waitingForInputRef = useRef(false);
+  const [connectedTools, setConnectedTools] = useState([]);
 
   const scrollToBottom = () => {
     if (!isUserScrolling) {
@@ -52,6 +54,14 @@ export default function WorkflowModal({ isOpen, onClose, onWorkflowComplete, das
     }
   }, [messages, isUserScrolling]);
 
+  // Load connected tools when modal opens
+  useEffect(() => {
+    if (isOpen && dashboardType) {
+      const tools = getConnectedTools(dashboardType);
+      setConnectedTools(tools);
+    }
+  }, [isOpen, dashboardType]);
+
   const resetModal = () => {
     setStep("initial");
     setInitialPrompt("");
@@ -61,6 +71,7 @@ export default function WorkflowModal({ isOpen, onClose, onWorkflowComplete, das
     setLoading(false);
     setError("");
     waitingForInputRef.current = false;
+    setConnectedTools([]);
   };
 
   const handleClose = () => {
@@ -128,6 +139,22 @@ export default function WorkflowModal({ isOpen, onClose, onWorkflowComplete, das
     setMessages([]);
     
     try {
+      // Prepare custom tools information for the API
+      const customToolsInfo = connectedTools
+        .filter(tool => tool.isCustom)
+        .map(tool => ({
+          name: tool.name,
+          baseUrl: tool.baseUrl,
+          token: tool.token,
+          documentation: tool.documentation
+        }));
+
+      // Create the directive with custom tools context
+      let directiveWithContext = initialPrompt;
+      if (customToolsInfo.length > 0) {
+        directiveWithContext += `\n\nDetails:\n${JSON.stringify(customToolsInfo, null, 2)}`;
+      }
+
       const response = await fetch(`https://https--ibhack008-instabase.instabase.site.sandboxes.run/api/v2/aihub/workflows/${wfId}/directive/stream`, {
         method: "POST",
         headers: {
@@ -136,7 +163,7 @@ export default function WorkflowModal({ isOpen, onClose, onWorkflowComplete, das
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          directive: initialPrompt,
+          directive: directiveWithContext,
         }),
       });
 
@@ -327,6 +354,22 @@ export default function WorkflowModal({ isOpen, onClose, onWorkflowComplete, das
     setError("");
 
     try {
+      // Prepare custom tools information for resume context
+      const customToolsInfo = connectedTools
+        .filter(tool => tool.isCustom)
+        .map(tool => ({
+          name: tool.name,
+          baseUrl: tool.baseUrl,
+          token: tool.token,
+          documentation: tool.documentation
+        }));
+
+      // Create user input with custom tools context if needed
+      let userInputWithContext = userInput;
+      if (customToolsInfo.length > 0) {
+        userInputWithContext += `\n\nAvailable Custom Tools:\n${JSON.stringify(customToolsInfo, null, 2)}`;
+      }
+
       const response = await fetch(`https://https--ibhack008-instabase.instabase.site.sandboxes.run/api/v2/aihub/workflows/${workflowId}/resume`, {
         method: "POST",
         headers: {
@@ -334,7 +377,7 @@ export default function WorkflowModal({ isOpen, onClose, onWorkflowComplete, das
           "ib-context": "ibhack008",
         },
         body: JSON.stringify({
-          user_input: userInput,
+          user_input: userInputWithContext,
         }),
       });
 

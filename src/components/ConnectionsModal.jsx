@@ -5,6 +5,7 @@ import {
   toggleConnection, 
   addCustomConnection, 
   removeConnection,
+  resetDashboardConnections,
   AVAILABLE_COLORS,
   AVAILABLE_ICONS
 } from "../utils/connectionsStorage";
@@ -17,7 +18,10 @@ const ConnectionsModal = ({ isOpen, onClose, dashboardType, dashboardTitle, onCo
   const [newConnection, setNewConnection] = useState({
     name: "",
     icon: "🔧",
-    color: "bg-gray-500"
+    color: "bg-gray-500",
+    baseUrl: "",
+    token: "",
+    documentation: ""
   });
 
   useEffect(() => {
@@ -63,7 +67,12 @@ const ConnectionsModal = ({ isOpen, onClose, dashboardType, dashboardTitle, onCo
 
   const handleAddConnection = async () => {
     if (!newConnection.name.trim()) {
-      setError("Please enter a connection name");
+      setError("Please enter a tool name");
+      return;
+    }
+    
+    if (!newConnection.baseUrl.trim()) {
+      setError("Please enter a base URL");
       return;
     }
 
@@ -83,7 +92,10 @@ const ConnectionsModal = ({ isOpen, onClose, dashboardType, dashboardTitle, onCo
       setNewConnection({
         name: "",
         icon: "🔧",
-        color: "bg-gray-500"
+        color: "bg-gray-500",
+        baseUrl: "",
+        token: "",
+        documentation: ""
       });
       setShowAddForm(false);
       
@@ -117,12 +129,36 @@ const ConnectionsModal = ({ isOpen, onClose, dashboardType, dashboardTitle, onCo
     }
   };
 
+  const handleResetConnections = async () => {
+    try {
+      setError("");
+      setLoading(true);
+      await resetDashboardConnections(dashboardType);
+      
+      // Reload connections
+      await loadConnections();
+      
+      // Notify parent component
+      if (onConnectionsUpdate) {
+        onConnectionsUpdate();
+      }
+    } catch (error) {
+      console.error('Error resetting connections:', error);
+      setError('Failed to reset connections');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleClose = () => {
     setShowAddForm(false);
     setNewConnection({
       name: "",
       icon: "🔧",
-      color: "bg-gray-500"
+      color: "bg-gray-500",
+      baseUrl: "",
+      token: "",
+      documentation: ""
     });
     setError("");
     onClose();
@@ -197,6 +233,12 @@ const ConnectionsModal = ({ isOpen, onClose, dashboardType, dashboardTitle, onCo
                             }`}>
                               {connection.connected ? 'Connected' : 'Disconnected'}
                             </p>
+                            {/* Show additional info for custom tools */}
+                            {connection.isCustom && connection.baseUrl && (
+                              <p className="text-xs text-gray-400 mt-1 truncate">
+                                {connection.baseUrl}
+                              </p>
+                            )}
                           </div>
                         </div>
                         <div className="flex items-center space-x-2">
@@ -247,7 +289,7 @@ const ConnectionsModal = ({ isOpen, onClose, dashboardType, dashboardTitle, onCo
                     <div className="space-y-4">
                       <div>
                         <label className="block text-sm font-medium text-gray-700 mb-2">
-                          Tool Name
+                          Tool Name *
                         </label>
                         <input
                           type="text"
@@ -255,6 +297,45 @@ const ConnectionsModal = ({ isOpen, onClose, dashboardType, dashboardTitle, onCo
                           onChange={(e) => setNewConnection(prev => ({ ...prev, name: e.target.value }))}
                           placeholder="e.g., Notion, Airtable, Custom API"
                           className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                          Base URL *
+                        </label>
+                        <input
+                          type="url"
+                          value={newConnection.baseUrl}
+                          onChange={(e) => setNewConnection(prev => ({ ...prev, baseUrl: e.target.value }))}
+                          placeholder="https://api.example.com"
+                          className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                          API Token
+                        </label>
+                        <input
+                          type="password"
+                          value={newConnection.token}
+                          onChange={(e) => setNewConnection(prev => ({ ...prev, token: e.target.value }))}
+                          placeholder="Your API token or key"
+                          className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                          Documentation
+                        </label>
+                        <textarea
+                          value={newConnection.documentation}
+                          onChange={(e) => setNewConnection(prev => ({ ...prev, documentation: e.target.value }))}
+                          placeholder="API documentation or usage notes"
+                          rows={3}
+                          className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-indigo-500 focus:border-transparent resize-none"
                         />
                       </div>
 
@@ -309,7 +390,7 @@ const ConnectionsModal = ({ isOpen, onClose, dashboardType, dashboardTitle, onCo
                         </button>
                         <button
                           onClick={handleAddConnection}
-                          disabled={loading || !newConnection.name.trim()}
+                          disabled={loading || !newConnection.name.trim() || !newConnection.baseUrl.trim()}
                           className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center space-x-2"
                         >
                           {loading ? (
@@ -331,9 +412,18 @@ const ConnectionsModal = ({ isOpen, onClose, dashboardType, dashboardTitle, onCo
         {/* Footer */}
         <div className="border-t p-6">
           <div className="flex justify-between items-center">
-            <p className="text-sm text-gray-500">
-              {connections.filter(c => c.connected).length} of {connections.length} tools connected
-            </p>
+            <div className="flex items-center space-x-4">
+              <p className="text-sm text-gray-500">
+                {connections.filter(c => c.connected).length} of {connections.length} tools connected
+              </p>
+              <button
+                onClick={handleResetConnections}
+                disabled={loading}
+                className="text-sm text-red-600 hover:text-red-800 hover:underline transition-colors disabled:opacity-50"
+              >
+                Reset to Defaults
+              </button>
+            </div>
             <button
               onClick={handleClose}
               className="px-6 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors"

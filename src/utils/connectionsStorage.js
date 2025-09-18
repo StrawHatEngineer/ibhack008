@@ -6,23 +6,14 @@ const CONNECTIONS_KEY = 'dashboard_connections';
 const DEFAULT_CONNECTIONS = {
   email: [
     { id: 'gmail', name: 'Gmail', icon: '✉️', color: 'bg-red-500', connected: true },
-    { id: 'outlook', name: 'Outlook', icon: '📧', color: 'bg-blue-500', connected: true },
-    { id: 'google_drive', name: 'Google Drive', icon: '💾', color: 'bg-green-500', connected: false },
   ],
   github: [
     { id: 'github', name: 'GitHub', icon: '🐙', color: 'bg-gray-800', connected: true },
-    { id: 'gitlab', name: 'GitLab', icon: '🦊', color: 'bg-orange-500', connected: false },
-    { id: 'bitbucket', name: 'Bitbucket', icon: '🪣', color: 'bg-blue-700', connected: false },
   ],
   slack: [
     { id: 'slack', name: 'Slack', icon: '💬', color: 'bg-purple-500', connected: true },
-    { id: 'teams', name: 'Microsoft Teams', icon: '👥', color: 'bg-purple-600', connected: false },
-    { id: 'zoom', name: 'Zoom', icon: '📹', color: 'bg-blue-500', connected: false }
   ],
   custom: [
-    { id: 'zapier', name: 'Zapier', icon: '⚡', color: 'bg-orange-500', connected: false },
-    { id: 'notion', name: 'Notion', icon: '📝', color: 'bg-gray-700', connected: false },
-    { id: 'airtable', name: 'Airtable', icon: '🗃️', color: 'bg-yellow-500', connected: false }
   ]
 };
 
@@ -134,7 +125,11 @@ export const addCustomConnection = (dashboardType, newConnection) => {
       icon: newConnection.icon || '🔧',
       color: newConnection.color || 'bg-gray-500',
       connected: newConnection.connected || false,
-      isCustom: true
+      isCustom: true,
+      // New fields for custom tools
+      baseUrl: newConnection.baseUrl || '',
+      token: newConnection.token || '',
+      documentation: newConnection.documentation || ''
     };
     
     const updatedConnections = [...connections, connectionToAdd];

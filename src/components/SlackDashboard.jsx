@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, memo } from "react";
-import { PlusCircle, RefreshCw, MessageSquare, Hash, User, Settings } from "lucide-react";
+import { PlusCircle, RefreshCw, MessageSquare, Hash, User, Settings, X } from "lucide-react";
 import WorkflowModal from "./WorkflowModal";
 import { getSavedWorkflows, updateWorkflowLastRun, saveWorkflow } from "../utils/workflowStorage";
 import { useActivity } from "../contexts/ActivityContext";
@@ -31,7 +31,7 @@ const SlackWidget = memo(function SlackWidget({ title, content, loading, onConte
           {content.map((item, index) => {   
             const itemIsRead = isRead(index);
             if (typeof item === 'object' && item !== null) {
-              const message = item['message'] || item.text || item.Message || 'No Message';
+              const message = item['subject'] || item.text || item.Message || 'No Message';
               const channel = item['channel'] || item.Channel || 'general';
               const user = item['user'] || item.sender || item.User || 'Unknown User';
               const link = item['link'] || item.link || item.Link || '';
@@ -40,7 +40,7 @@ const SlackWidget = memo(function SlackWidget({ title, content, loading, onConte
                 <li key={index} className="flex justify-between items-center">
                   <button
                     onClick={() => handleSlackClick(link)}
-                    className={`text-left w-full p-3 text-sm border rounded-lg transition-all duration-200 ${
+                    className={`text-left w-full p-3 text-sm border rounded-lg transition-all duration-200 overflow-hidden ${
                       itemIsRead 
                         ? 'bg-gray-50 border-gray-200 text-gray-500 line-through' 
                         : 'bg-white border-purple-200 text-purple-700 hover:bg-purple-50 hover:border-purple-300'
@@ -51,11 +51,11 @@ const SlackWidget = memo(function SlackWidget({ title, content, loading, onConte
                       <div className="flex-1 min-w-0">
                         <div className="font-medium truncate">{message}</div>
                         <div className="text-xs text-gray-500 mt-1 flex items-center">
-                          <Hash className="w-3 h-3 mr-1" />
+                          {/* <Hash className="w-3 h-3 mr-1" />
                           {channel}
                           <span className="mx-2">•</span>
                           <User className="w-3 h-3 mr-1" />
-                          {user}
+                          {user} */}
                         </div>
                       </div>
                     </div>
@@ -210,7 +210,9 @@ const SlackDashboard = memo(function SlackDashboard({
   workflowStatus,
   statusMessage,
   dashboardId,
-  connectedTools 
+  connectedTools,
+  onRemoveDashboard,
+  canRemove 
 }) {
   // Filter widgets that belong to this dashboard
   // First check for dashboardId match, fallback to title-based filtering for backwards compatibility
@@ -233,29 +235,6 @@ const SlackDashboard = memo(function SlackDashboard({
             <MessageSquare className="mr-3 w-7 h-7" />
             Slack Management
           </h2>
-          {/* Connection indicators */}
-          <div className="flex items-center space-x-1">
-            {connectedTools && connectedTools.length > 0 ? (
-              <>
-                {connectedTools.slice(0, 4).map((tool) => (
-                  <div
-                    key={tool.id}
-                    className={`w-7 h-7 rounded-full ${tool.color} flex items-center justify-center text-sm text-white shadow-sm`}
-                    title={tool.name}
-                  >
-                    {tool.icon}
-                  </div>
-                ))}
-                {connectedTools.length > 4 && (
-                  <div className="w-7 h-7 rounded-full bg-gray-400 flex items-center justify-center text-sm text-white shadow-sm">
-                    +{connectedTools.length - 4}
-                  </div>
-                )}
-              </>
-            ) : (
-              <span className="text-sm text-gray-500">No connections</span>
-            )}
-          </div>
         </div>
         <div className="flex items-center space-x-2">
           <button
@@ -273,6 +252,16 @@ const SlackDashboard = memo(function SlackDashboard({
             <PlusCircle className="mr-2" size={20} />
             Add Widget
           </button>
+          {canRemove && (
+            <button
+              onClick={onRemoveDashboard}
+              className="flex items-center bg-red-500 text-white px-3 py-2 rounded-lg shadow hover:bg-red-600 transition-colors"
+              title="Close Dashboard"
+            >
+              <X className="mr-1" size={16} />
+              <span className="hidden sm:inline">Remove</span>
+            </button>
+          )}
         </div>
       </div>
 

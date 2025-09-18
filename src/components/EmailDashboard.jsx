@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, memo } from "react";
-import { PlusCircle, RefreshCw, Mail, Settings } from "lucide-react";
+import { PlusCircle, RefreshCw, Mail, Settings, X } from "lucide-react";
 import WorkflowModal from "./WorkflowModal";
 import { getSavedWorkflows, updateWorkflowLastRun, saveWorkflow } from "../utils/workflowStorage";
 import { useActivity } from "../contexts/ActivityContext";
@@ -202,7 +202,9 @@ const EmailDashboard = memo(function EmailDashboard({
   workflowStatus,
   statusMessage,
   dashboardId,
-  connectedTools 
+  connectedTools,
+  onRemoveDashboard,
+  canRemove 
 }) {
   // Filter widgets that belong to this dashboard
   // First check for dashboardId match, fallback to title-based filtering for backwards compatibility
@@ -225,29 +227,6 @@ const EmailDashboard = memo(function EmailDashboard({
             <Mail className="mr-3 w-7 h-7" />
             Email Management
           </h2>
-          {/* Connection indicators */}
-          <div className="flex items-center space-x-1">
-            {connectedTools && connectedTools.length > 0 ? (
-              <>
-                {connectedTools.slice(0, 4).map((tool) => (
-                  <div
-                    key={tool.id}
-                    className={`w-7 h-7 rounded-full ${tool.color} flex items-center justify-center text-sm text-white shadow-sm`}
-                    title={tool.name}
-                  >
-                    {tool.icon}
-                  </div>
-                ))}
-                {connectedTools.length > 4 && (
-                  <div className="w-7 h-7 rounded-full bg-gray-400 flex items-center justify-center text-sm text-white shadow-sm">
-                    +{connectedTools.length - 4}
-                  </div>
-                )}
-              </>
-            ) : (
-              <span className="text-sm text-gray-500">No connections</span>
-            )}
-          </div>
         </div>
         <div className="flex items-center space-x-2">
           <button
@@ -265,6 +244,16 @@ const EmailDashboard = memo(function EmailDashboard({
             <PlusCircle className="mr-2" size={20} />
             Add Widget
           </button>
+          {canRemove && (
+            <button
+              onClick={onRemoveDashboard}
+              className="flex items-center bg-red-500 text-white px-3 py-2 rounded-lg shadow hover:bg-red-600 transition-colors"
+              title="Close Dashboard"
+            >
+              <X className="mr-1" size={16} />
+              <span className="hidden sm:inline">Remove</span>
+            </button>
+          )}
         </div>
       </div>
 
