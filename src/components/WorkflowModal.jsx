@@ -149,8 +149,12 @@ export default function WorkflowModal({ isOpen, onClose, onWorkflowComplete, das
           documentation: tool.documentation
         }));
 
-      // Create the directive with custom tools context
+      // Create the directive with custom tools context and JSON format instruction
       let directiveWithContext = initialPrompt;
+      
+      // Always append JSON format instruction
+      directiveWithContext += "\n\nReturn the result in json format";
+      
       if (customToolsInfo.length > 0) {
         directiveWithContext += `\n\nDetails:\n${JSON.stringify(customToolsInfo, null, 2)}`;
       }
@@ -364,8 +368,12 @@ export default function WorkflowModal({ isOpen, onClose, onWorkflowComplete, das
           documentation: tool.documentation
         }));
 
-      // Create user input with custom tools context if needed
+      // Create user input with custom tools context and JSON format instruction
       let userInputWithContext = userInput;
+      
+      // Always append JSON format instruction to user input
+      userInputWithContext += "\n\nReturn the result in json format";
+      
       if (customToolsInfo.length > 0) {
         userInputWithContext += `\n\nAvailable Custom Tools:\n${JSON.stringify(customToolsInfo, null, 2)}`;
       }
@@ -497,10 +505,10 @@ export default function WorkflowModal({ isOpen, onClose, onWorkflowComplete, das
         {/* Header */}
         <div className="flex justify-between items-center p-6 border-b">
           <h2 className="text-xl font-bold text-gray-900">
-            {step === "initial" && "Create New Workflow"}
-            {step === "streaming" && "Workflow Running..."}
+            {step === "initial" && "Create New Widget"}
+            {step === "streaming" && "Widget Running..."}
             {step === "waiting_input" && "Input Required"}
-            {step === "completed" && "Workflow Completed"}
+            {step === "completed" && "Widget Completed"}
             {step === "error" && "Error"}
           </h2>
           <button
