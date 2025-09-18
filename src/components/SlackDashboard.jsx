@@ -3,6 +3,7 @@ import { PlusCircle, RefreshCw, MessageSquare, Hash, User, Settings, X } from "l
 import WorkflowModal from "./WorkflowModal";
 import { getSavedWorkflows, updateWorkflowLastRun, saveWorkflow } from "../utils/workflowStorage";
 import { useActivity } from "../contexts/ActivityContext";
+import Tooltip from "./Tooltip";
 
 const SlackWidget = memo(function SlackWidget({ title, content, loading, onContentUpdate, workflowId, onRunWorkflow, onDeleteWidget, widgetId }) {
   const { markItemCompleted, isItemCompleted } = useActivity();
@@ -35,31 +36,38 @@ const SlackWidget = memo(function SlackWidget({ title, content, loading, onConte
               const channel = item['channel'] || item.Channel || 'general';
               const user = item['user'] || item.sender || item.User || 'Unknown User';
               const link = item['link'] || item.link || item.Link || '';
+              const summary = item['summary'] || item.summary || item.Summary || '';
 
               return (
                 <li key={index} className="flex justify-between items-center">
-                  <button
-                    onClick={() => handleSlackClick(link)}
-                    className={`text-left w-full p-3 text-sm border rounded-lg transition-all duration-200 overflow-hidden ${
-                      itemIsRead 
-                        ? 'bg-gray-50 border-gray-200 text-gray-500 line-through' 
-                        : 'bg-white border-purple-200 text-purple-700 hover:bg-purple-50 hover:border-purple-300'
-                    }`}
+                  <Tooltip 
+                    content={message}
+                    summary={summary}
+                    className="flex-1 overflow-hidden"
                   >
-                    <div className="flex items-start">
-                      <MessageSquare className="mr-2 mt-0.5 w-4 h-4 flex-shrink-0" />
-                      <div className="flex-1 min-w-0">
-                        <div className="font-medium truncate">{message}</div>
-                        <div className="text-xs text-gray-500 mt-1 flex items-center">
-                          {/* <Hash className="w-3 h-3 mr-1" />
-                          {channel}
-                          <span className="mx-2">•</span>
-                          <User className="w-3 h-3 mr-1" />
-                          {user} */}
+                    <button
+                      onClick={() => handleSlackClick(link)}
+                      className={`text-left w-full p-3 text-sm border rounded-lg transition-all duration-200 overflow-hidden ${
+                        itemIsRead 
+                          ? 'bg-gray-50 border-gray-200 text-gray-500 line-through' 
+                          : 'bg-white border-purple-200 text-purple-700 hover:bg-purple-50 hover:border-purple-300'
+                      }`}
+                    >
+                      <div className="flex items-start">
+                        <MessageSquare className="mr-2 mt-0.5 w-4 h-4 flex-shrink-0" />
+                        <div className="flex-1 min-w-0">
+                          <div className="font-medium truncate">{message}</div>
+                          <div className="text-xs text-gray-500 mt-1 flex items-center">
+                            {/* <Hash className="w-3 h-3 mr-1" />
+                            {channel}
+                            <span className="mx-2">•</span>
+                            <User className="w-3 h-3 mr-1" />
+                            {user} */}
+                          </div>
                         </div>
                       </div>
-                    </div>
-                  </button>
+                    </button>
+                  </Tooltip>
                   <button
                     onClick={() => markAsRead(index)}
                     className="ml-2 text-sm text-green-600 hover:text-green-800 flex-shrink-0"
@@ -71,19 +79,24 @@ const SlackWidget = memo(function SlackWidget({ title, content, loading, onConte
             } else {
               return (
                 <li key={index} className="flex justify-between items-center">
-                  <button
-                    onClick={() => handleSlackClick('')}
-                    className={`text-left w-full p-3 text-sm border rounded-lg transition-all duration-200 ${
-                      itemIsRead 
-                        ? 'bg-gray-50 border-gray-200 text-gray-500 line-through' 
-                        : 'bg-white border-purple-200 text-purple-700 hover:bg-purple-50 hover:border-purple-300'
-                    }`}
+                  <Tooltip 
+                    content={String(item)}
+                    className="flex-1 overflow-hidden"
                   >
-                    <div className="flex items-center">
-                      <MessageSquare className="mr-2 w-4 h-4" />
-                      {String(item)}
-                    </div>
-                  </button>
+                    <button
+                      onClick={() => handleSlackClick('')}
+                      className={`text-left w-full p-3 text-sm border rounded-lg transition-all duration-200 ${
+                        itemIsRead 
+                          ? 'bg-gray-50 border-gray-200 text-gray-500 line-through' 
+                          : 'bg-white border-purple-200 text-purple-700 hover:bg-purple-50 hover:border-purple-300'
+                      }`}
+                    >
+                      <div className="flex items-center">
+                        <MessageSquare className="mr-2 w-4 h-4" />
+                        {String(item)}
+                      </div>
+                    </button>
+                  </Tooltip>
                   <button
                     onClick={() => markAsRead(index)}
                     className="ml-2 text-sm text-green-600 hover:text-green-800"
@@ -101,15 +114,20 @@ const SlackWidget = memo(function SlackWidget({ title, content, loading, onConte
       const link = content['link'] || content.link || content.Link || '';
       return (
         <div className="flex justify-between items-center">
-          <button
-            onClick={() => handleSlackClick(link)}
-            className="text-left w-full p-3 text-sm bg-white border border-purple-200 text-purple-700 hover:bg-purple-50 hover:border-purple-300 rounded-lg transition-all duration-200"
+          <Tooltip 
+            content={message}
+            className="flex-1 overflow-hidden"
           >
-            <div className="flex items-center">
-              <MessageSquare className="mr-2 w-4 h-4" />
-              {message}
-            </div>
-          </button>
+            <button
+              onClick={() => handleSlackClick(link)}
+              className="text-left w-full p-3 text-sm bg-white border border-purple-200 text-purple-700 hover:bg-purple-50 hover:border-purple-300 rounded-lg transition-all duration-200"
+            >
+              <div className="flex items-center">
+                <MessageSquare className="mr-2 w-4 h-4" />
+                {message}
+              </div>
+            </button>
+          </Tooltip>
           <button
             onClick={() => markAsRead(0)}
             className="ml-2 text-sm text-green-600 hover:text-green-800"

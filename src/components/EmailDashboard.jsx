@@ -3,6 +3,7 @@ import { PlusCircle, RefreshCw, Mail, Settings, X } from "lucide-react";
 import WorkflowModal from "./WorkflowModal";
 import { getSavedWorkflows, updateWorkflowLastRun, saveWorkflow } from "../utils/workflowStorage";
 import { useActivity } from "../contexts/ActivityContext";
+import Tooltip from "./Tooltip";
 
 const EmailWidget = memo(function EmailWidget({ title, content, loading, onContentUpdate, workflowId, onRunWorkflow, onDeleteWidget, widgetId }) {
   const { markItemCompleted, isItemCompleted } = useActivity();
@@ -34,24 +35,31 @@ const EmailWidget = memo(function EmailWidget({ title, content, loading, onConte
               const emailSubject = item['subject'] || item.subject || item.Subject || 'No Subject';
               const sender = item['sender'] || item.from || item.From || 'Unknown Sender';
               const link = item['link'] || item.link || item.Link || '';
+              const summary = item['summary'] || item.summary || item.Summary || '';
 
               return (
                 <li key={index} className="flex justify-between items-center">
-                  <button
-                    onClick={() => handleEmailClick(link)}
-                    className={`text-left w-full p-3 text-sm border overflow-hidden rounded-lg transition-all duration-200 ${
-                      itemIsRead 
-                        ? 'bg-gray-50 border-gray-200 text-gray-500 line-through' 
-                        : 'bg-white border-blue-200 text-blue-700 hover:bg-blue-50 hover:border-blue-300'
-                    }`}
+                  <Tooltip 
+                    content={emailSubject}
+                    summary={summary}
+                    className="flex-1 overflow-hidden"
                   >
-                    <div className="flex items-start">
-                      <Mail className="mr-2 mt-0.5 w-4 h-4 flex-shrink-0" />
-                      <div className="flex-1 min-w-0">
-                        <div className="font-medium truncate">{emailSubject}</div>
+                    <button
+                      onClick={() => handleEmailClick(link)}
+                      className={`text-left w-full p-3 text-sm border overflow-hidden rounded-lg transition-all duration-200 ${
+                        itemIsRead 
+                          ? 'bg-gray-50 border-gray-200 text-gray-500 line-through' 
+                          : 'bg-white border-blue-200 text-blue-700 hover:bg-blue-50 hover:border-blue-300'
+                      }`}
+                    >
+                      <div className="flex items-start">
+                        <Mail className="mr-2 mt-0.5 w-4 h-4 flex-shrink-0" />
+                        <div className="flex-1 min-w-0">
+                          <div className="font-medium truncate">{emailSubject}</div>
+                        </div>
                       </div>
-                    </div>
-                  </button>
+                    </button>
+                  </Tooltip>
                   <button
                     onClick={() => markAsRead(index)}
                     className="ml-2 text-sm text-green-600 hover:text-green-800 flex-shrink-0"
@@ -63,19 +71,24 @@ const EmailWidget = memo(function EmailWidget({ title, content, loading, onConte
             } else {
               return (
                 <li key={index} className="flex justify-between items-center">
-                  <button
-                    onClick={() => handleEmailClick('')}
-                    className={`text-left w-full p-3 text-sm border rounded-lg transition-all duration-200 ${
-                      isRead 
-                        ? 'bg-gray-50 border-gray-200 text-gray-500 line-through' 
-                        : 'bg-white border-blue-200 text-blue-700 hover:bg-blue-50 hover:border-blue-300'
-                    }`}
+                  <Tooltip 
+                    content={String(item)}
+                    className="flex-1 overflow-hidden"
                   >
-                    <div className="flex items-center">
-                      <Mail className="mr-2 w-4 h-4" />
-                      {String(item)}
-                    </div>
-                  </button>
+                    <button
+                      onClick={() => handleEmailClick('')}
+                      className={`text-left w-full p-3 text-sm border rounded-lg transition-all duration-200 ${
+                        itemIsRead 
+                          ? 'bg-gray-50 border-gray-200 text-gray-500 line-through' 
+                          : 'bg-white border-blue-200 text-blue-700 hover:bg-blue-50 hover:border-blue-300'
+                      }`}
+                    >
+                      <div className="flex items-center">
+                        <Mail className="mr-2 w-4 h-4" />
+                        {String(item)}
+                      </div>
+                    </button>
+                  </Tooltip>
                   <button
                     onClick={() => markAsRead(index)}
                     className="ml-2 text-sm text-green-600 hover:text-green-800"
@@ -90,18 +103,25 @@ const EmailWidget = memo(function EmailWidget({ title, content, loading, onConte
       );
     } else if (typeof content === 'object' && content !== null && Object.keys(content).length > 0) {
       const emailSubject = content['email_subject'] || content.subject || content.Subject || 'No Subject';
+      const sender = content['sender'] || content.from || content.From || 'Unknown Sender';
       const link = content['link'] || content.link || content.Link || '';
       return (
         <div className="flex justify-between items-center">
-          <button
-            onClick={() => handleEmailClick(link)}
-            className="text-left w-full p-3 text-sm bg-white border border-blue-200 text-blue-700 hover:bg-blue-50 hover:border-blue-300 rounded-lg transition-all duration-200"
+          <Tooltip 
+            content={emailSubject}
+            summary={summary}
+            className="flex-1 overflow-hidden"
           >
-            <div className="flex items-center">
-              <Mail className="mr-2 w-4 h-4" />
-              {emailSubject}
-            </div>
-          </button>
+            <button
+              onClick={() => handleEmailClick(link)}
+              className="text-left w-full p-3 text-sm bg-white border border-blue-200 text-blue-700 hover:bg-blue-50 hover:border-blue-300 rounded-lg transition-all duration-200"
+            >
+              <div className="flex items-center">
+                <Mail className="mr-2 w-4 h-4" />
+                {emailSubject}
+              </div>
+            </button>
+          </Tooltip>
           <button
             onClick={() => markAsRead(0)}
             className="ml-2 text-sm text-green-600 hover:text-green-800"
@@ -117,24 +137,29 @@ const EmailWidget = memo(function EmailWidget({ title, content, loading, onConte
             const itemIsRead = isRead(index);
             return (
               <li key={index} className="flex justify-between items-center">
-                <button
-                  onClick={() => handleEmailClick('')}
-                  className={`text-left w-full p-3 text-sm border rounded-lg transition-all duration-200 ${
-                    itemIsRead 
-                      ? 'bg-gray-50 border-gray-200 text-gray-500 line-through' 
-                      : 'bg-white border-blue-200 text-blue-700 hover:bg-blue-50 hover:border-blue-300'
-                  }`}
+                <Tooltip 
+                  content={item}
+                  className="flex-1 overflow-hidden"
                 >
-                  <div className="flex items-center">
-                    <Mail className="mr-2 w-4 h-4" />
-                    {item}
-                  </div>
-                </button>
+                  <button
+                    onClick={() => handleEmailClick('')}
+                    className={`text-left w-full p-3 text-sm border rounded-lg transition-all duration-200 ${
+                      itemIsRead 
+                        ? 'bg-gray-50 border-gray-200 text-gray-500 line-through' 
+                        : 'bg-white border-blue-200 text-blue-700 hover:bg-blue-50 hover:border-blue-300'
+                    }`}
+                  >
+                    <div className="flex items-center">
+                      <Mail className="mr-2 w-4 h-4" />
+                      {item}
+                    </div>
+                  </button>
+                </Tooltip>
                 <button
                   onClick={() => markAsRead(index)}
                   className="ml-2 text-sm text-green-600 hover:text-green-800"
                 >
-                  <i className={`fa ${isRead ? 'fa-check' : ''} font-bold border-2 border-green-600 p-1 rounded ${isRead ? '' : 'w-6 h-6'}`}></i>
+                  <i className={`fa ${itemIsRead ? 'fa-check' : ''} font-bold border-2 border-green-600 p-1 rounded ${itemIsRead ? '' : 'w-6 h-6'}`}></i>
                 </button>
               </li>
             );

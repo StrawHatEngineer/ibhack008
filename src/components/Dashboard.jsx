@@ -687,6 +687,14 @@ function Dashboard() {
     // Small delay to ensure localStorage write is complete
     setTimeout(() => {
       loadSavedWorkflows();
+      
+      // Also run the workflow immediately after adding to dashboard
+      if (workflowId) {
+        console.log('Running workflow after adding to dashboard:', workflowId);
+        runIndividualWorkflow(workflowId).catch(error => {
+          console.error('Error running workflow after adding to dashboard:', error);
+        });
+      }
     }, 100);
   };
 

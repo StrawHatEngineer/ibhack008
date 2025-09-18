@@ -3,6 +3,7 @@ import { PlusCircle, RefreshCw, Github, GitPullRequest, GitCommit, Star, Bug, Se
 import WorkflowModal from "./WorkflowModal";
 import { getSavedWorkflows, updateWorkflowLastRun, saveWorkflow } from "../utils/workflowStorage";
 import { useActivity } from "../contexts/ActivityContext";
+import Tooltip from "./Tooltip";
 
 const GitHubWidget = memo(function GitHubWidget({ title, content, loading, onContentUpdate, workflowId, onRunWorkflow, onDeleteWidget, widgetId }) {
   const { markItemCompleted, isItemCompleted } = useActivity();
@@ -54,32 +55,39 @@ const GitHubWidget = memo(function GitHubWidget({ title, content, loading, onCon
               const author = item['author'] || item.user || item.Author || 'Unknown Author';
               const type = item['type'] || item.Type || 'Activity';
               const link = item['link'] || item.url || item.Link || '';
+              const summary = item['summary'] || item.summary || item.Summary || '';
 
               return (
                 <li key={index} className="flex justify-between items-center">
-                  <button
-                    onClick={() => handleGitHubClick(link)}
-                    className={`text-left w-full p-3 text-sm border overflow-hidden rounded-lg transition-all duration-200 ${
-                      itemIsRead 
-                        ? 'bg-gray-50 border-gray-200 text-gray-500 line-through' 
-                        : 'bg-white border-gray-300 text-gray-700 hover:bg-gray-50 hover:border-gray-400'
-                    }`}
+                  <Tooltip 
+                    content={subject}
+                    summary={summary}
+                    className="flex-1 overflow-hidden"
                   >
-                    <div className="flex items-start">
-                      {getItemIcon(item)}
-                      <div className="flex-1 min-w-0">
-                        <div className="font-medium truncate">{subject}</div>
-                        {/* <div className="text-xs text-gray-500 mt-1 flex items-center">
-                          <Github className="w-3 h-3 mr-1" />
-                          {repository}
-                          <span className="mx-2">•</span>
-                          <span className="bg-gray-100 px-2 py-0.5 rounded text-xs">{type}</span>
-                          <span className="mx-2">•</span>
-                          {author}
-                        </div> */}
+                    <button
+                      onClick={() => handleGitHubClick(link)}
+                      className={`text-left w-full p-3 text-sm border overflow-hidden rounded-lg transition-all duration-200 ${
+                        itemIsRead 
+                          ? 'bg-gray-50 border-gray-200 text-gray-500 line-through' 
+                          : 'bg-white border-gray-300 text-gray-700 hover:bg-gray-50 hover:border-gray-400'
+                      }`}
+                    >
+                      <div className="flex items-start">
+                        {getItemIcon(item)}
+                        <div className="flex-1 min-w-0">
+                          <div className="font-medium truncate">{subject}</div>
+                          {/* <div className="text-xs text-gray-500 mt-1 flex items-center">
+                            <Github className="w-3 h-3 mr-1" />
+                            {repository}
+                            <span className="mx-2">•</span>
+                            <span className="bg-gray-100 px-2 py-0.5 rounded text-xs">{type}</span>
+                            <span className="mx-2">•</span>
+                            {author}
+                          </div> */}
+                        </div>
                       </div>
-                    </div>
-                  </button>
+                    </button>
+                  </Tooltip>
                   <button
                     onClick={() => markAsRead(index)}
                     className="ml-2 text-sm text-green-600 hover:text-green-800 flex-shrink-0"
@@ -91,19 +99,24 @@ const GitHubWidget = memo(function GitHubWidget({ title, content, loading, onCon
             } else {
               return (
                 <li key={index} className="flex justify-between items-center">
-                  <button
-                    onClick={() => handleGitHubClick('')}
-                    className={`text-left w-full p-3 text-sm border rounded-lg transition-all duration-200 ${
-                      itemIsRead 
-                        ? 'bg-gray-50 border-gray-200 text-gray-500 line-through' 
-                        : 'bg-white border-gray-300 text-gray-700 hover:bg-gray-50 hover:border-gray-400'
-                    }`}
+                  <Tooltip 
+                    content={String(item)}
+                    className="flex-1 overflow-hidden"
                   >
-                    <div className="flex items-center">
-                      <Github className="mr-2 w-4 h-4" />
-                      {String(item)}
-                    </div>
-                  </button>
+                    <button
+                      onClick={() => handleGitHubClick('')}
+                      className={`text-left w-full p-3 text-sm border rounded-lg transition-all duration-200 ${
+                        itemIsRead 
+                          ? 'bg-gray-50 border-gray-200 text-gray-500 line-through' 
+                          : 'bg-white border-gray-300 text-gray-700 hover:bg-gray-50 hover:border-gray-400'
+                      }`}
+                    >
+                      <div className="flex items-center">
+                        <Github className="mr-2 w-4 h-4" />
+                        {String(item)}
+                      </div>
+                    </button>
+                  </Tooltip>
                   <button
                     onClick={() => markAsRead(index)}
                     className="ml-2 text-sm text-green-600 hover:text-green-800"
@@ -118,18 +131,27 @@ const GitHubWidget = memo(function GitHubWidget({ title, content, loading, onCon
       );
     } else if (typeof content === 'object' && content !== null && Object.keys(content).length > 0) {
       const title = content['title'] || content.Title || content.subject || 'No Title';
+      const repository = content['repository'] || content.repo || content.Repository || 'Unknown Repo';
+      const author = content['author'] || content.user || content.Author || 'Unknown Author';
+      const type = content['type'] || content.Type || 'Activity';
       const link = content['link'] || content.url || content.Link || '';
       return (
         <div className="flex justify-between items-center">
-          <button
-            onClick={() => handleGitHubClick(link)}
-            className="text-left w-full p-3 text-sm bg-white border border-gray-300 text-gray-700 hover:bg-gray-50 hover:border-gray-400 rounded-lg transition-all duration-200"
+          <Tooltip 
+            content={title}
+            summary={`${repository} • ${type} • ${author}`}
+            className="flex-1 overflow-hidden"
           >
-            <div className="flex items-center">
-              {getItemIcon(content)}
-              {title}
-            </div>
-          </button>
+            <button
+              onClick={() => handleGitHubClick(link)}
+              className="text-left w-full p-3 text-sm bg-white border border-gray-300 text-gray-700 hover:bg-gray-50 hover:border-gray-400 rounded-lg transition-all duration-200"
+            >
+              <div className="flex items-center">
+                {getItemIcon(content)}
+                {title}
+              </div>
+            </button>
+          </Tooltip>
           <button
             onClick={() => markAsRead(0)}
             className="ml-2 text-sm text-green-600 hover:text-green-800"
@@ -145,24 +167,29 @@ const GitHubWidget = memo(function GitHubWidget({ title, content, loading, onCon
             const itemIsRead = isRead(index);
             return (
               <li key={index} className="flex justify-between items-center">
-                <button
-                  onClick={() => handleGitHubClick('')}
-                  className={`text-left w-full p-3 text-sm border rounded-lg transition-all duration-200 ${
-                    isRead 
-                      ? 'bg-gray-50 border-gray-200 text-gray-500 line-through' 
-                      : 'bg-white border-gray-300 text-gray-700 hover:bg-gray-50 hover:border-gray-400'
-                  }`}
+                <Tooltip 
+                  content={item}
+                  className="flex-1"
                 >
-                  <div className="flex items-center">
-                    <Github className="mr-2 w-4 h-4" />
-                    {item}
-                  </div>
-                </button>
+                  <button
+                    onClick={() => handleGitHubClick('')}
+                    className={`text-left w-full p-3 text-sm border rounded-lg transition-all duration-200 ${
+                      itemIsRead 
+                        ? 'bg-gray-50 border-gray-200 text-gray-500 line-through' 
+                        : 'bg-white border-gray-300 text-gray-700 hover:bg-gray-50 hover:border-gray-400'
+                    }`}
+                  >
+                    <div className="flex items-center">
+                      <Github className="mr-2 w-4 h-4" />
+                      {item}
+                    </div>
+                  </button>
+                </Tooltip>
                 <button
                   onClick={() => markAsRead(index)}
                   className="ml-2 text-sm text-green-600 hover:text-green-800"
                 >
-                  <i className={`fa ${isRead ? 'fa-check' : ''} font-bold border-2 border-green-600 p-1 rounded ${isRead ? '' : 'w-6 h-6'}`}></i>
+                  <i className={`fa ${itemIsRead ? 'fa-check' : ''} font-bold border-2 border-green-600 p-1 rounded ${itemIsRead ? '' : 'w-6 h-6'}`}></i>
                 </button>
               </li>
             );
