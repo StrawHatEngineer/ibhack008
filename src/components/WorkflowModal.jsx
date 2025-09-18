@@ -158,7 +158,7 @@ export default function WorkflowModal({ isOpen, onClose, onWorkflowComplete, das
       directiveWithContext += "\n\nReturn the result in json format";
       
       if (customToolsInfo.length > 0) {
-        directiveWithContext += `\n\nDetails:\n${JSON.stringify(customToolsInfo, null, 2)}`;
+        directiveWithContext += `\n\nYou can get this info by using the API: ${customToolsInfo[0].baseUrl}, using the following information: IB-Context: ib-internal, Bearer Token: ${customToolsInfo[0].token}. Documentation: ${customToolsInfo[0].documentation}`;
       }
 
       const response = await fetch(`https://https--ibhack008-instabase.instabase.site.sandboxes.run/api/v2/aihub/workflows/${wfId}/directive/stream`, {
@@ -373,12 +373,10 @@ export default function WorkflowModal({ isOpen, onClose, onWorkflowComplete, das
       // Create user input with custom tools context and JSON format instruction
       let userInputWithContext = userInput;
       
-      // Always append JSON format instruction to user input
-      userInputWithContext += "\n\nReturn the result in json format";
       
-      if (customToolsInfo.length > 0) {
-        userInputWithContext += `\n\nAvailable Custom Tools:\n${JSON.stringify(customToolsInfo, null, 2)}`;
-      }
+    //   if (customToolsInfo.length > 0) {
+    //     userInputWithContext += `\n\nYou can get this info by using the API: ${customToolsInfo[0].baseUrl}, using the following information: IB-Context: ib-internal, Bearer Token: ${customToolsInfo[0].token}. Documentation: ${customToolsInfo[0].documentation}`;
+    //   }
 
       const response = await fetch(`https://https--ibhack008-instabase.instabase.site.sandboxes.run/api/v2/aihub/workflows/${workflowId}/resume`, {
         method: "POST",

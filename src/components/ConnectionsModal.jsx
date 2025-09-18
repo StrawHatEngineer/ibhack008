@@ -234,11 +234,11 @@ const ConnectionsModal = ({ isOpen, onClose, dashboardType, dashboardTitle, onCo
                               {connection.connected ? 'Connected' : 'Disconnected'}
                             </p>
                             {/* Show additional info for custom tools */}
-                            {connection.isCustom && connection.baseUrl && (
-                              <p className="text-xs text-gray-400 mt-1 truncate">
+                            {/* {connection.isCustom && connection.baseUrl && (
+                              <p className="text-xs text-gray-400 mt-1 truncate overflow-hidden">
                                 {connection.baseUrl}
                               </p>
-                            )}
+                            )} */}
                           </div>
                         </div>
                         <div className="flex items-center space-x-2">

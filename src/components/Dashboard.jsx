@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, memo } from "react";
 import { PlusCircle, RefreshCw, Mail, MessageSquare, Github, Plus, Settings, Sparkles, X } from "lucide-react";
 import WorkflowModal from "./WorkflowModal";
 import { getSavedWorkflows, updateWorkflowLastRun, saveWorkflow, getCachedWorkflowResult, saveWorkflowResult, hasValidCache, clearExpiredResults, deleteWorkflow } from "../utils/workflowStorage";
@@ -8,13 +8,252 @@ import GitHubDashboard from "./GitHubDashboard";
 import ConnectionsModal from "./ConnectionsModal";
 import { useActivity } from "../contexts/ActivityContext";
 import { getConnectedTools } from "../utils/connectionsStorage";
+import { getSavedDashboards, addCustomDashboard, updateDashboardTitle, removeDashboard as removeDashboardFromStorage, canRemoveDashboard } from "../utils/dashboardStorage";
+import Tooltip from "./Tooltip";
+
+// Custom Widget Component
+const CustomWidget = memo(function CustomWidget({ title, content, loading, onContentUpdate, workflowId, onRunWorkflow, onDeleteWidget, widgetId }) {
+  const { markItemCompleted, isItemCompleted } = useActivity();
+  const [isRunning, setIsRunning] = useState(false);
+
+  const handleItemClick = (link) => {
+    if (link && link.startsWith('http')) {
+      window.open(link, '_blank');
+    }
+  };
+
+  const markAsCompleted = (index) => {
+    console.log(`Item ${index} marked as completed`);
+    markItemCompleted('custom', workflowId, index);
+  };
+
+  const isCompleted = (index) => {
+    return isItemCompleted('custom', workflowId, index);
+  };
+
+  const renderCustomContent = () => {
+    if (loading) return "Loading...";
+    
+    if (Array.isArray(content) && content.length > 0) {
+      return (
+        <ul className="space-y-2 mr-4 ms-4">
+          {content.map((item, index) => {   
+            const itemIsCompleted = isCompleted(index);
+            if (typeof item === 'object' && item !== null) {
+              const title = item['title'] || item.name || item.subject || item.task || 'No Title';
+              const summary = item['summary'] || item.summary || item.content || '';
+              const link = item['link'] || item.url || item.href || '';
+
+              return (
+                <li key={index} className="flex justify-between items-center">
+                  <Tooltip 
+                    content={title}
+                    summary={summary}
+                    className="flex-1 overflow-hidden"
+                  >
+                    <button
+                      onClick={() => handleItemClick(link)}
+                      className={`text-left w-full p-3 text-sm border overflow-hidden rounded-lg transition-all duration-200 ${
+                        itemIsCompleted 
+                          ? 'bg-gray-50 border-gray-200 text-gray-500 line-through' 
+                          : 'bg-white border-purple-200 text-purple-700 hover:bg-purple-50 hover:border-purple-300'
+                      }`}
+                    >
+                      <div className="flex items-start">
+                        <Sparkles className="mr-2 mt-0.5 w-4 h-4 flex-shrink-0" />
+                        <div className="flex-1 min-w-0">
+                          <div className="font-medium truncate">{title}</div>
+                          {description && (
+                            <div className="text-xs text-gray-500 truncate mt-1">{summary}</div>
+                          )}
+                        </div>
+                      </div>
+                    </button>
+                  </Tooltip>
+                  <button
+                    onClick={() => markAsCompleted(index)}
+                    className="ml-2 text-sm text-green-600 hover:text-green-800 flex-shrink-0"
+                  >
+                    <i className={`fa ${itemIsCompleted ? 'fa-check' : ''} font-bold border-2 border-green-600 p-1 rounded ${itemIsCompleted ? '' : 'w-6 h-6'}`}></i>
+                  </button>
+                </li>
+              );
+            } else {
+              return (
+                <li key={index} className="flex justify-between items-center">
+                  <Tooltip 
+                    content={String(item)}
+                    className="flex-1 overflow-hidden"
+                  >
+                    <button
+                      onClick={() => handleItemClick('')}
+                      className={`text-left w-full p-3 text-sm border rounded-lg transition-all duration-200 ${
+                        itemIsCompleted 
+                          ? 'bg-gray-50 border-gray-200 text-gray-500 line-through' 
+                          : 'bg-white border-purple-200 text-purple-700 hover:bg-purple-50 hover:border-purple-300'
+                      }`}
+                    >
+                      <div className="flex items-center">
+                        <Sparkles className="mr-2 w-4 h-4" />
+                        {String(item)}
+                      </div>
+                    </button>
+                  </Tooltip>
+                  <button
+                    onClick={() => markAsCompleted(index)}
+                    className="ml-2 text-sm text-green-600 hover:text-green-800"
+                  >
+                    <i className={`fa ${itemIsCompleted ? 'fa-check' : ''} font-bold border-2 border-green-600 p-1 rounded ${itemIsCompleted ? '' : 'w-6 h-6'}`}></i>
+                  </button>
+                </li>
+              );
+            }
+          })}
+        </ul>
+      );
+    } else if (typeof content === 'object' && content !== null && Object.keys(content).length > 0) {
+      const title = content['title'] || content.name || content.subject || 'No Title';
+      const description = content['description'] || content.summary || content.content || '';
+      const link = content['link'] || content.url || content.href || '';
+      return (
+        <div className="flex justify-between items-center">
+          <Tooltip 
+            content={title}
+            summary={description}
+            className="flex-1 overflow-hidden"
+          >
+            <button
+              onClick={() => handleItemClick(link)}
+              className="text-left w-full p-3 text-sm bg-white border border-purple-200 text-purple-700 hover:bg-purple-50 hover:border-purple-300 rounded-lg transition-all duration-200"
+            >
+              <div className="flex items-center">
+                <Sparkles className="mr-2 w-4 h-4" />
+                {title}
+              </div>
+              {description && (
+                <div className="text-xs text-gray-500 mt-1">{description}</div>
+              )}
+            </button>
+          </Tooltip>
+          <button
+            onClick={() => markAsCompleted(0)}
+            className="ml-2 text-sm text-green-600 hover:text-green-800"
+          >
+            <i className={`fa ${isCompleted(0) ? 'fa-check' : ''} font-bold border-2 border-green-600 p-1 rounded ${isCompleted(0) ? '' : 'w-6 h-6'}`}></i>
+          </button>
+        </div>
+      );
+    } else if (typeof content === 'string' && content.trim() !== '') {
+      return (
+        <ul className="space-y-2">
+          {content.split('\n').filter(line => line.trim()).map((item, index) => {
+            const itemIsCompleted = isCompleted(index);
+            return (
+              <li key={index} className="flex justify-between items-center">
+                <Tooltip 
+                  content={item}
+                  className="flex-1 overflow-hidden"
+                >
+                  <button
+                    onClick={() => handleItemClick('')}
+                    className={`text-left w-full p-3 text-sm border rounded-lg transition-all duration-200 ${
+                      itemIsCompleted 
+                        ? 'bg-gray-50 border-gray-200 text-gray-500 line-through' 
+                        : 'bg-white border-purple-200 text-purple-700 hover:bg-purple-50 hover:border-purple-300'
+                    }`}
+                  >
+                    <div className="flex items-center">
+                      <Sparkles className="mr-2 w-4 h-4" />
+                      {item}
+                    </div>
+                  </button>
+                </Tooltip>
+                <button
+                  onClick={() => markAsCompleted(index)}
+                  className="ml-2 text-sm text-green-600 hover:text-green-800"
+                >
+                  <i className={`fa ${itemIsCompleted ? 'fa-check' : ''} font-bold border-2 border-green-600 p-1 rounded ${itemIsCompleted ? '' : 'w-6 h-6'}`}></i>
+                </button>
+              </li>
+            );
+          })}
+        </ul>
+      );
+    } else {
+      return (
+        <div className="text-center text-gray-500 py-8">
+          <Sparkles className="mx-auto w-12 h-12 text-gray-300 mb-3" />
+          <p>No content to display</p>
+        </div>
+      );
+    }
+  };
+
+  const handleRunWorkflow = async () => {
+    if (!workflowId || !onRunWorkflow) return;
+    
+    setIsRunning(true);
+    try {
+      await onRunWorkflow(workflowId);
+    } catch (error) {
+      console.error('Error running workflow:', error);
+    } finally {
+      setIsRunning(false);
+    }
+  };
+
+  return (
+    <div className="rounded-2xl bg-purple-50 shadow-lg p-6 w-98 h-96 flex flex-col border-2 border-purple-100">
+      <div className="flex justify-between items-center mb-4">
+        <h2 className="text-xl font-semibold text-purple-800 flex items-center">
+          <Sparkles className="mr-2 w-5 h-5" />
+          {title}
+        </h2>
+        <div className="flex items-center gap-2">
+          {workflowId && (
+            <button
+              onClick={handleRunWorkflow}
+              disabled={isRunning || loading}
+              className={`flex items-center px-3 py-2 rounded-md text-sm transition-colors ${
+                isRunning || loading
+                ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                : 'bg-purple-600 text-white hover:bg-purple-700'
+            }`}
+          >
+            <RefreshCw className={`w-4 h-4 ${isRunning ? 'animate-spin' : ''}`} />
+          </button>
+          )}
+          {onDeleteWidget && (
+            <button
+              onClick={() => onDeleteWidget(widgetId)}
+              className="flex items-center px-2 py-2 rounded-md text-sm bg-red-600 text-white hover:bg-red-700 transition-colors"
+              title="Delete Widget"
+            >
+              <X className="w-4 h-4" />
+            </button>
+          )}
+        </div>
+      </div>
+      <div className="flex-1 overflow-auto text-sm text-gray-700">
+        {loading || isRunning ? "Loading..." : renderCustomContent()}
+      </div>
+    </div>
+  );
+});
 
 // Custom Dashboard Component
-const CustomDashboard = ({ dashboardId, dashboardTitle, onShowModal, onShowConnectionsModal, widgets, onUpdateWidget, onRunWorkflow, connectedTools, onRemoveDashboard, canRemove }) => {
+const CustomDashboard = ({ dashboardId, dashboardTitle, onShowModal, onShowConnectionsModal, widgets, onUpdateWidget, onDeleteWidget, onRunWorkflow, connectedTools, onRemoveDashboard, canRemove, onTitleChange }) => {
   const [customTitle, setCustomTitle] = useState(dashboardTitle || 'Custom Dashboard');
   const [isEditing, setIsEditing] = useState(false);
 
   const customWidgets = widgets.filter(widget => widget.dashboardId === dashboardId);
+
+  const handleTitleChange = (newTitle) => {
+    setCustomTitle(newTitle);
+    if (onTitleChange) {
+      onTitleChange(dashboardId, newTitle);
+    }
+  };
 
   return (
     <div className="bg-white rounded-lg shadow-md p-6">
@@ -29,10 +268,14 @@ const CustomDashboard = ({ dashboardId, dashboardTitle, onShowModal, onShowConne
                 type="text"
                 value={customTitle}
                 onChange={(e) => setCustomTitle(e.target.value)}
-                onBlur={() => setIsEditing(false)}
+                onBlur={() => {
+                  setIsEditing(false);
+                  handleTitleChange(customTitle);
+                }}
                 onKeyDown={(e) => {
                   if (e.key === 'Enter') {
                     setIsEditing(false);
+                    handleTitleChange(customTitle);
                   }
                 }}
                 className="text-xl font-semibold text-gray-800 bg-transparent border-b-2 border-indigo-300 focus:outline-none focus:border-indigo-500"
@@ -102,35 +345,17 @@ const CustomDashboard = ({ dashboardId, dashboardTitle, onShowModal, onShowConne
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {customWidgets.map((widget) => (
-            <div key={widget.id} className="bg-gray-50 rounded-lg p-4 border border-gray-200">
-              <div className="flex justify-between items-start mb-3">
-                <h3 className="font-medium text-gray-800">{widget.title}</h3>
-                <button
-                  onClick={() => onRunWorkflow(widget.workflowId)}
-                  className="text-indigo-600 hover:text-indigo-800 transition-colors"
-                  disabled={widget.loading}
-                >
-                  {widget.loading ? (
-                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-indigo-600"></div>
-                  ) : (
-                    <RefreshCw className="h-4 w-4" />
-                  )}
-                </button>
-              </div>
-              <div className="text-sm text-gray-600">
-                {widget.loading ? (
-                  <div className="flex items-center space-x-2">
-                    <div className="animate-pulse bg-gray-300 h-4 w-3/4 rounded"></div>
-                  </div>
-                ) : widget.content ? (
-                  <div className="max-h-32 overflow-y-auto">
-                    {typeof widget.content === 'string' ? widget.content : JSON.stringify(widget.content)}
-                  </div>
-                ) : (
-                  <span className="text-gray-400">No content yet</span>
-                )}
-              </div>
-            </div>
+            <CustomWidget 
+              key={`custom-${widget.id}`} 
+              title={widget.title} 
+              content={widget.content} 
+              loading={widget.loading} 
+              workflowId={widget.workflowId}
+              widgetId={widget.id}
+              onContentUpdate={(newContent) => onUpdateWidget(widget.id, newContent)}
+              onDeleteWidget={onDeleteWidget}
+              onRunWorkflow={onRunWorkflow}
+            />
           ))}
         </div>
       )}
@@ -194,11 +419,7 @@ function Dashboard() {
   const [dashboardConnections, setDashboardConnections] = useState({});
   
   // State for managing dashboard instances
-  const [activeDashboards, setActiveDashboards] = useState([
-    { id: 'dashboard-1', type: 'email', title: 'Email Management' },
-    { id: 'dashboard-2', type: 'github', title: 'GitHub Management' },
-    { id: 'dashboard-3', type: 'slack', title: 'Slack Management' }
-  ]);
+  const [activeDashboards, setActiveDashboards] = useState([]);
   
   // Default workflows that auto-load on page refresh
   const defaultWorkflows = [
@@ -386,7 +607,25 @@ function Dashboard() {
     setTimeout(poll, 3000);
   };
 
+  const loadDashboardsFromStorage = () => {
+    try {
+      const savedDashboards = getSavedDashboards();
+      console.log('Loaded dashboards from storage:', savedDashboards);
+      setActiveDashboards(savedDashboards);
+    } catch (error) {
+      console.error('Error loading dashboards from storage:', error);
+      // Fallback to default dashboards
+      setActiveDashboards([
+        { id: 'dashboard-1', type: 'email', title: 'Email Management', isDefault: true },
+        { id: 'dashboard-2', type: 'github', title: 'GitHub Management', isDefault: true },
+        { id: 'dashboard-3', type: 'slack', title: 'Slack Management', isDefault: true }
+      ]);
+    }
+  };
+
   useEffect(() => {
+    // Load dashboards from storage first
+    loadDashboardsFromStorage();
     // Initialize default widgets first with loading states
     initializeDefaultWidgets();
     // Start polling to check for existing workflow results (don't execute)
@@ -681,21 +920,64 @@ function Dashboard() {
 
   const handleWorkflowComplete = (result, workflowId) => {
     // The workflow is already saved to localStorage by WorkflowModal
-    // So we just need to reload all saved workflows to update the dashboard
-    console.log('Workflow completed, reloading saved workflows...');
+    console.log('Workflow completed, adding widget to dashboard and running...');
     
-    // Small delay to ensure localStorage write is complete
-    setTimeout(() => {
-      loadSavedWorkflows();
-      
-      // Also run the workflow immediately after adding to dashboard
-      if (workflowId) {
-        console.log('Running workflow after adding to dashboard:', workflowId);
-        runIndividualWorkflow(workflowId).catch(error => {
-          console.error('Error running workflow after adding to dashboard:', error);
-        });
+    if (workflowId) {
+      // Get the saved workflow details
+      try {
+        const savedWorkflows = getSavedWorkflows();
+        const newWorkflow = savedWorkflows.find(w => w.id === workflowId);
+        
+        if (newWorkflow) {
+          // Create the widget immediately with loading state
+          const newWidget = {
+            id: Date.now(), // Use timestamp as unique ID
+            title: newWorkflow.title,
+            content: "",
+            loading: true, // Start in loading state
+            workflowId: workflowId,
+            dashboardId: newWorkflow.dashboardId || currentDashboardContext?.dashboardId
+          };
+          
+          // Add widget to state immediately
+          setWidgets(prevWidgets => {
+            // Check if widget already exists to avoid duplicates
+            const existingWidget = prevWidgets.find(w => w.workflowId === workflowId);
+            if (existingWidget) {
+              // Update existing widget to loading state
+              return prevWidgets.map(w => 
+                w.workflowId === workflowId 
+                  ? { ...w, loading: true }
+                  : w
+              );
+            } else {
+              // Add new widget
+              return [...prevWidgets, newWidget];
+            }
+          });
+          
+          // Small delay to ensure state update, then run workflow
+          setTimeout(() => {
+            console.log('Running workflow after adding widget to dashboard:', workflowId);
+            runIndividualWorkflow(workflowId).catch(error => {
+              console.error('Error running workflow after adding to dashboard:', error);
+              // Update widget to show error state
+              setWidgets(prevWidgets => 
+                prevWidgets.map(w => 
+                  w.workflowId === workflowId 
+                    ? { ...w, content: `Error: ${error.message}`, loading: false }
+                    : w
+                )
+              );
+            });
+          }, 100);
+        } else {
+          console.error('Workflow not found in saved workflows:', workflowId);
+        }
+      } catch (error) {
+        console.error('Error handling workflow completion:', error);
       }
-    }, 100);
+    }
   };
 
   // Function to add new dashboard
@@ -711,15 +993,38 @@ function Dashboard() {
     const newDashboard = {
       id: newId,
       type: dashboardType,
-      title: dashboardConfig.name
+      title: dashboardConfig.name,
+      isDefault: false
     };
 
-    setActiveDashboards(prev => [...prev, newDashboard]);
+    try {
+      // Save to storage
+      addCustomDashboard(newDashboard);
+      // Update state
+      setActiveDashboards(prev => [...prev, newDashboard]);
+      console.log('Added new dashboard:', newDashboard);
+    } catch (error) {
+      console.error('Error adding new dashboard:', error);
+    }
   };
 
   // Function to remove dashboard
   const removeDashboard = (dashboardId) => {
-    setActiveDashboards(prev => prev.filter(dashboard => dashboard.id !== dashboardId));
+    try {
+      // Check if dashboard can be removed
+      if (!canRemoveDashboard(dashboardId)) {
+        console.warn('Cannot remove default dashboard:', dashboardId);
+        return;
+      }
+      
+      // Remove from storage
+      removeDashboardFromStorage(dashboardId);
+      // Update state
+      setActiveDashboards(prev => prev.filter(dashboard => dashboard.id !== dashboardId));
+      console.log('Removed dashboard:', dashboardId);
+    } catch (error) {
+      console.error('Error removing dashboard:', error);
+    }
   };
 
   // Function to handle showing modal with dashboard context
@@ -758,6 +1063,25 @@ function Dashboard() {
   // Function to handle connections update
   const handleConnectionsUpdate = () => {
     loadAllConnections();
+  };
+
+  // Function to handle dashboard title changes
+  const handleDashboardTitleChange = (dashboardId, newTitle) => {
+    try {
+      // Update in storage
+      updateDashboardTitle(dashboardId, newTitle);
+      // Update in state
+      setActiveDashboards(prev => 
+        prev.map(dashboard => 
+          dashboard.id === dashboardId 
+            ? { ...dashboard, title: newTitle }
+            : dashboard
+        )
+      );
+      console.log('Dashboard title updated:', dashboardId, newTitle);
+    } catch (error) {
+      console.error('Error updating dashboard title:', error);
+    }
   };
 
   // AddNewDashboard component
@@ -867,7 +1191,8 @@ function Dashboard() {
                   dashboardTitle={dashboard.title}
                   connectedTools={dashboardConnections[dashboard.type] || []}
                   onRemoveDashboard={() => removeDashboard(dashboard.id)}
-                  canRemove={activeDashboards.length > 1}
+                  canRemove={canRemoveDashboard(dashboard.id)}
+                  onTitleChange={dashboard.type === 'custom' ? handleDashboardTitleChange : undefined}
                 />
               </div>
             );
