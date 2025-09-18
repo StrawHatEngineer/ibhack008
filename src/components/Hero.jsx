@@ -1,5 +1,5 @@
 import React from 'react'
-import { Mail, MessageSquare, Github, Zap, Target, BarChart3 } from 'lucide-react'
+import { Mail, MessageSquare, Github, Zap, Target, BarChart3, Plus } from 'lucide-react'
 
 const Hero = () => {
   const features = [
@@ -17,6 +17,11 @@ const Hero = () => {
       icon: Github,
       title: "GitHub Intelligence",
       description: "Smart GitHub PR, code review, and task management"
+    },
+    {
+      icon: Plus,
+      title: "Custom Integrations",
+      description: "Connect your favorite tools and services to your dashboard"
     }
   ];
 
