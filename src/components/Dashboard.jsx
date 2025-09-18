@@ -63,7 +63,7 @@ const CustomWidget = memo(function CustomWidget({ title, content, loading, onCon
                         <Sparkles className="mr-2 mt-0.5 w-4 h-4 flex-shrink-0" />
                         <div className="flex-1 min-w-0">
                           <div className="font-medium truncate">{title}</div>
-                          {description && (
+                          {summary && (
                             <div className="text-xs text-gray-500 truncate mt-1">{summary}</div>
                           )}
                         </div>
@@ -113,13 +113,13 @@ const CustomWidget = memo(function CustomWidget({ title, content, loading, onCon
       );
     } else if (typeof content === 'object' && content !== null && Object.keys(content).length > 0) {
       const title = content['title'] || content.name || content.subject || 'No Title';
-      const description = content['description'] || content.summary || content.content || '';
+      const summary = content['summary'] || content.summary || content.content || '';
       const link = content['link'] || content.url || content.href || '';
       return (
         <div className="flex justify-between items-center">
           <Tooltip 
             content={title}
-            summary={description}
+            summary={summary}
             className="flex-1 overflow-hidden"
           >
             <button
@@ -130,8 +130,8 @@ const CustomWidget = memo(function CustomWidget({ title, content, loading, onCon
                 <Sparkles className="mr-2 w-4 h-4" />
                 {title}
               </div>
-              {description && (
-                <div className="text-xs text-gray-500 mt-1">{description}</div>
+              {summary && (
+                <div className="text-xs text-gray-500 mt-1">{summary}</div>
               )}
             </button>
           </Tooltip>
