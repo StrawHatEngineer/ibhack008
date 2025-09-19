@@ -435,8 +435,8 @@ function Dashboard() {
     { id: '01995738-d264-700b-8d31-e9342843f854', title: 'Follow Up Emails', dashboardType: 'email' },
     { id: '01995bcf-929f-78e3-bc98-38da52f3a11c', title: 'PRs you need to Review', dashboardType: 'github' },
     { id: '01995bd3-a553-78e3-a05e-6cf0ab94d14d', title: 'PRs you raised', dashboardType: 'github' },
-    { id: '01995b71-bdbb-78e3-949d-51f2df429e8a', title: 'Follow-Up slack messages', dashboardType: 'slack' },
-    { id: '01995d41-1a9c-7629-b630-4b98562accdc', title: 'AI Hub Tasks', dashboardType: 'aihub' }
+    { id: '01995b71-bdbb-78e3-949d-51f2df429e8a', title: 'Follow-Up slack messages', dashboardType: 'slack' }
+    // { id: '01995d41-1a9c-7629-b630-4b98562accdc', title: 'AI Hub Tasks', dashboardType: 'aihub' }
   ];
   
   function parseLlmResponse(llmResponse) {
@@ -533,39 +533,46 @@ function Dashboard() {
         }
       }
       
-      // Update widgets for all completed workflows
-      if (completedWorkflows.length > 0) {
-        setWidgets(prevWidgets => {
-          let updatedWidgets = [...prevWidgets];
-          
-          completedWorkflows.forEach((completedWorkflow) => {
-            const existingIndex = updatedWidgets.findIndex(w => w.workflowId === completedWorkflow.workflowId);
+        // Update widgets for all completed workflows
+        if (completedWorkflows.length > 0) {
+          setWidgets(prevWidgets => {
+            let updatedWidgets = [...prevWidgets];
             
-            if (existingIndex !== -1) {
-              // Update existing widget (should always find one since we create loading widgets first)
-              updatedWidgets[existingIndex] = {
-                ...updatedWidgets[existingIndex],
-                content: completedWorkflow.content,
-                loading: false
-              };
-            } else {
-              // Fallback: Add new widget if not found (shouldn't happen with new flow)
-              console.warn(`Widget not found for workflow ${completedWorkflow.workflowId}, creating new one`);
-              const newWidget = {
-                id: updatedWidgets.length + 1,
-                title: completedWorkflow.title,
-                content: completedWorkflow.content,
-                loading: false,
-                workflowId: completedWorkflow.workflowId,
-                dashboardId: null // Default widgets are not assigned to specific dashboards initially
-              };
-              updatedWidgets.push(newWidget);
-            }
+            completedWorkflows.forEach((completedWorkflow) => {
+              const existingIndex = updatedWidgets.findIndex(w => w.workflowId === completedWorkflow.workflowId);
+              
+              if (existingIndex !== -1) {
+                // Update existing widget (should always find one since we create loading widgets first)
+                updatedWidgets[existingIndex] = {
+                  ...updatedWidgets[existingIndex],
+                  content: completedWorkflow.content,
+                  loading: false
+                };
+                console.log('Default workflow widget updated:', {
+                  workflowId: completedWorkflow.workflowId,
+                  title: completedWorkflow.title,
+                  dashboardId: updatedWidgets[existingIndex].dashboardId,
+                  contentType: typeof completedWorkflow.content,
+                  contentLength: Array.isArray(completedWorkflow.content) ? completedWorkflow.content.length : 'N/A'
+                });
+              } else {
+                // Fallback: Add new widget if not found (shouldn't happen with new flow)
+                console.warn(`Widget not found for workflow ${completedWorkflow.workflowId}, creating new one`);
+                const newWidget = {
+                  id: updatedWidgets.length + 1,
+                  title: completedWorkflow.title,
+                  content: completedWorkflow.content,
+                  loading: false,
+                  workflowId: completedWorkflow.workflowId,
+                  dashboardId: null // Default widgets are not assigned to specific dashboards initially
+                };
+                updatedWidgets.push(newWidget);
+              }
+            });
+            
+            return updatedWidgets;
           });
-          
-          return updatedWidgets;
-        });
-      }
+        }
       
       if (allComplete) {
         setWorkflowStatus('complete');
@@ -652,6 +659,7 @@ function Dashboard() {
 
   // Update activity tracker whenever widgets change
   useEffect(() => {
+    console.log('Dashboard: Updating activity tracker with widgets:', widgets.length, 'widgets');
     updateWidgets(widgets);
   }, [widgets, updateWidgets]);
 
@@ -782,15 +790,28 @@ function Dashboard() {
       updateWorkflowLastRun(workflowId);
       
       // Find the widget that needs to be updated
-      const widgetIndex = widgets.findIndex(widget => widget.workflowId === workflowId);
-      if (widgetIndex === -1) {
-        throw new Error('Widget not found');
-      }
+      await new Promise(resolve => setTimeout(resolve, 5000));
+      
+      // Get current widgets state and find the widget
+      let widgetIndex = -1;
+      setWidgets(currentWidgets => {
+        widgetIndex = currentWidgets.findIndex(widget => widget.workflowId === workflowId);
+        
+        if (widgetIndex === -1) {
+          console.error('Widget not found for workflowId:', workflowId);
+          console.log('Available widgets:', currentWidgets.map(w => ({ id: w.id, workflowId: w.workflowId, title: w.title })));
+          return currentWidgets; // Return unchanged if widget not found
+        }
 
-      // Set the specific widget to loading state
-      const updatedWidgets = [...widgets];
-      updatedWidgets[widgetIndex] = { ...updatedWidgets[widgetIndex], loading: true };
-      setWidgets(updatedWidgets);
+        // Set the specific widget to loading state
+        const updatedWidgets = [...currentWidgets];
+        updatedWidgets[widgetIndex] = { ...updatedWidgets[widgetIndex], loading: true };
+        return updatedWidgets;
+      });
+      
+      if (widgetIndex === -1) {
+        return ('Refresh the Widget ....');
+      }
 
       // Execute the workflow
       const executeResponse = await fetch(`https://https--ibhack008-instabase.instabase.site.sandboxes.run/api/v2/aihub/workflows/${workflowId}/execute`, {
@@ -863,7 +884,13 @@ function Dashboard() {
                     content: parsedResponse,
                     loading: false 
                   };
-                  console.log('Widget updated with results');
+                  console.log('Widget updated with results:', {
+                    workflowId,
+                    title: updatedWidgets[currentWidgetIndex].title,
+                    dashboardId: updatedWidgets[currentWidgetIndex].dashboardId,
+                    contentType: typeof parsedResponse,
+                    contentLength: Array.isArray(parsedResponse) ? parsedResponse.length : 'N/A'
+                  });
                 }
                 return updatedWidgets;
               });

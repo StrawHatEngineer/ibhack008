@@ -143,24 +143,29 @@ const SlackWidget = memo(function SlackWidget({ title, content, loading, onConte
             const itemIsRead = isRead(index);
             return (
               <li key={index} className="flex justify-between items-center">
-                <button
-                  onClick={() => handleSlackClick('')}
-                  className={`text-left w-full p-3 text-sm border rounded-lg transition-all duration-200 ${
-                    isRead 
-                      ? 'bg-gray-50 border-gray-200 text-gray-500 line-through' 
-                      : 'bg-white border-purple-200 text-purple-700 hover:bg-purple-50 hover:border-purple-300'
-                  }`}
+                <Tooltip 
+                  content={item}
+                  className="flex-1 overflow-hidden"
                 >
-                  <div className="flex items-center">
-                    <MessageSquare className="mr-2 w-4 h-4" />
-                    {item}
-                  </div>
-                </button>
+                  <button
+                    onClick={() => handleSlackClick('')}
+                    className={`text-left w-full p-3 text-sm border rounded-lg transition-all duration-200 ${
+                      itemIsRead 
+                        ? 'bg-gray-50 border-gray-200 text-gray-500 line-through' 
+                        : 'bg-white border-purple-200 text-purple-700 hover:bg-purple-50 hover:border-purple-300'
+                    }`}
+                  >
+                    <div className="flex items-center">
+                      <MessageSquare className="mr-2 w-4 h-4" />
+                      {item}
+                    </div>
+                  </button>
+                </Tooltip>
                 <button
                   onClick={() => markAsRead(index)}
                   className="ml-2 text-sm text-green-600 hover:text-green-800"
                 >
-                  <i className={`fa ${isRead ? 'fa-check' : ''} font-bold border-2 border-green-600 p-1 rounded ${isRead ? '' : 'w-6 h-6'}`}></i>
+                  <i className={`fa ${itemIsRead ? 'fa-check' : ''} font-bold border-2 border-green-600 p-1 rounded ${itemIsRead ? '' : 'w-6 h-6'}`}></i>
                 </button>
               </li>
             );

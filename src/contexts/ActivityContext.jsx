@@ -44,57 +44,100 @@ export const ActivityProvider = ({ children }) => {
         const taskCount = widget.content.length;
         totalTasks += taskCount;
 
-        // Categorize by widget title/type
+        // Categorize by widget title/type and dashboardId
         const title = widget.title.toLowerCase();
-        if (title.includes('email') || title.includes('mail')) {
+        const dashboardId = widget.dashboardId;
+        
+        // Use dashboardId for more accurate categorization if available
+        if (dashboardId === 'dashboard-1' || title.includes('email') || title.includes('mail')) {
           emailTasks += taskCount;
-        } else if (title.includes('slack') || title.includes('message')) {
+        } else if (dashboardId === 'dashboard-3' || title.includes('slack') || title.includes('message')) {
           slackTasks += taskCount;
-        } else if (title.includes('github') || title.includes('git')) {
+        } else if (dashboardId === 'dashboard-2' || title.includes('github') || title.includes('git') || title.includes('pull') || title.includes('commit') || title.includes('issue') || title.includes('repo')) {
           githubTasks += taskCount;
         } else {
           customTasks += taskCount;
         }
-      } else if (widget.content && typeof widget.content === 'object') {
+      } else if (widget.content && typeof widget.content === 'object' && Object.keys(widget.content).length > 0) {
         // Single item content
         totalTasks += 1;
         const title = widget.title.toLowerCase();
-        if (title.includes('email') || title.includes('mail')) {
+        const dashboardId = widget.dashboardId;
+        
+        // Use dashboardId for more accurate categorization if available
+        if (dashboardId === 'dashboard-1' || title.includes('email') || title.includes('mail')) {
           emailTasks += 1;
-        } else if (title.includes('slack') || title.includes('message')) {
+        } else if (dashboardId === 'dashboard-3' || title.includes('slack') || title.includes('message')) {
           slackTasks += 1;
-        } else if (title.includes('github') || title.includes('git')) {
+        } else if (dashboardId === 'dashboard-2' || title.includes('github') || title.includes('git') || title.includes('pull') || title.includes('commit') || title.includes('issue') || title.includes('repo')) {
           githubTasks += 1;
         } else {
           customTasks += 1;
         }
+      } else if (widget.content && typeof widget.content === 'string' && widget.content.trim() !== '') {
+        // String content - count lines
+        const lines = widget.content.split('\n').filter(line => line.trim()).length;
+        totalTasks += lines;
+        
+        const title = widget.title.toLowerCase();
+        const dashboardId = widget.dashboardId;
+        
+        // Use dashboardId for more accurate categorization if available
+        if (dashboardId === 'dashboard-1' || title.includes('email') || title.includes('mail')) {
+          emailTasks += lines;
+        } else if (dashboardId === 'dashboard-3' || title.includes('slack') || title.includes('message')) {
+          slackTasks += lines;
+        } else if (dashboardId === 'dashboard-2' || title.includes('github') || title.includes('git') || title.includes('pull') || title.includes('commit') || title.includes('issue') || title.includes('repo')) {
+          githubTasks += lines;
+        } else {
+          customTasks += lines;
+        }
       }
     });
 
-    // Calculate completed tasks from stored completed items
-    const completedTasks = 
-      activityStats.completedItems.email.size + 
-      activityStats.completedItems.slack.size + 
-      activityStats.completedItems.github.size + 
-      activityStats.completedItems.custom.size;
+    setActivityStats(prev => {
+      // Calculate completed tasks from stored completed items using current state
+      const completedTasks = 
+        prev.completedItems.email.size + 
+        prev.completedItems.slack.size + 
+        prev.completedItems.github.size + 
+        prev.completedItems.custom.size;
 
-    const completionRate = totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0;
-    const todayCompleted = Math.floor(completedTasks * 0.6); // Simulate today's completion
-    const thisWeekCompleted = completedTasks;
+      const completionRate = totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0;
+      const todayCompleted = Math.floor(completedTasks * 0.6); // Simulate today's completion
+      const thisWeekCompleted = completedTasks;
 
-    setActivityStats(prev => ({
-      ...prev,
-      totalTasks,
-      completedTasks,
-      emailTasks,
-      slackTasks,
-      githubTasks,
-      customTasks,
-      completionRate,
-      todayCompleted,
-      thisWeekCompleted
-    }));
-  }, [activityStats.completedItems]);
+      // Debug logging to help verify activity stats are being calculated
+      console.log('Activity Stats Updated:', {
+        totalTasks,
+        emailTasks,
+        slackTasks,
+        githubTasks,
+        customTasks,
+        completedTasks,
+        completionRate,
+        widgetCount: widgetData.length,
+        widgetsWithContent: widgetData.filter(w => 
+          (Array.isArray(w.content) && w.content.length > 0) ||
+          (typeof w.content === 'object' && w.content && Object.keys(w.content).length > 0) ||
+          (typeof w.content === 'string' && w.content.trim() !== '')
+        ).length
+      });
+
+      return {
+        ...prev,
+        totalTasks,
+        completedTasks,
+        emailTasks,
+        slackTasks,
+        githubTasks,
+        customTasks,
+        completionRate,
+        todayCompleted,
+        thisWeekCompleted
+      };
+    });
+  }, []); // Remove dependency on completedItems to avoid circular dependency
 
   // Mark item as completed - memoized
   const markItemCompleted = useCallback((type, widgetId, itemIndex) => {
@@ -133,8 +176,12 @@ export const ActivityProvider = ({ children }) => {
 
   // Update widgets data - memoized and debounced
   const updateWidgets = useCallback((newWidgets) => {
+    console.log('ActivityContext: updateWidgets called with', newWidgets.length, 'widgets');
     setWidgets(newWidgets);
-    calculateActivityStats(newWidgets);
+    // Add a small delay to ensure the widgets state is updated before calculating stats
+    setTimeout(() => {
+      calculateActivityStats(newWidgets);
+    }, 0);
   }, [calculateActivityStats]);
 
   // Reset all completed items (for testing or reset functionality)
