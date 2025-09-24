@@ -2,6 +2,9 @@ import { useState, useEffect } from "react";
 import { BarChart3, TrendingUp, CheckCircle2, Clock, Mail, MessageSquare, Github, Sparkles, Calendar, Target } from "lucide-react";
 import { useActivity } from "../contexts/ActivityContext";
 import { clearExpiredResults } from "../utils/workflowStorage";
+import StatCard from "./ui/StatCard";
+import ProgressBar from "./ui/ProgressBar";
+import TaskTypeCard from "./ui/TaskTypeCard";
 
 const ActivityTracker = () => {
   const { activityStats, resetCompletedItems } = useActivity();
@@ -12,58 +15,6 @@ const ActivityTracker = () => {
     clearExpiredResults();
   }, []);
 
-  const StatCard = ({ icon: Icon, title, value, subtitle, color = "bg-blue-500", trend = null }) => (
-    <div className="bg-white rounded-lg p-6 shadow-md border border-gray-100 hover:shadow-lg transition-shadow duration-200">
-      <div className="flex items-center justify-between">
-        <div className="flex-1">
-          <p className="text-sm font-medium text-gray-600">{title}</p>
-          <p className="text-3xl font-bold text-gray-900 mt-1">{value}</p>
-          {subtitle && <p className="text-xs text-gray-500 mt-1">{subtitle}</p>}
-          {trend && (
-            <div className={`flex items-center mt-2 text-xs ${trend > 0 ? 'text-green-600' : 'text-red-600'}`}>
-              <TrendingUp className={`w-3 h-3 mr-1 ${trend < 0 ? 'transform rotate-180' : ''}`} />
-              <span>{Math.abs(trend)}% from last week</span>
-            </div>
-          )}
-        </div>
-        <div className={`${color} text-white p-3 rounded-lg`}>
-          <Icon className="h-6 w-6" />
-        </div>
-      </div>
-    </div>
-  );
-
-  const ProgressBar = ({ percentage, color = "bg-blue-500", label, showPercentage = true }) => (
-    <div className="space-y-2">
-      {label && (
-        <div className="flex justify-between text-sm">
-          <span className="text-gray-600">{label}</span>
-          {showPercentage && <span className="text-gray-900 font-medium">{percentage}%</span>}
-        </div>
-      )}
-      <div className="w-full bg-gray-200 rounded-full h-3">
-        <div 
-          className={`${color} h-3 rounded-full transition-all duration-500 ease-out`} 
-          style={{ width: `${percentage}%` }}
-        ></div>
-      </div>
-    </div>
-  );
-
-  const TaskTypeCard = ({ icon: Icon, title, count, color, percentage }) => (
-    <div className="bg-white rounded-lg p-4 border border-gray-100 hover:border-gray-200 transition-colors">
-      <div className="flex items-center space-x-3 mb-3">
-        <div className={`${color} text-white p-2 rounded-lg`}>
-          <Icon className="h-4 w-4" />
-        </div>
-        <div>
-          <h3 className="font-medium text-gray-900">{title}</h3>
-          <p className="text-sm text-gray-500">{count} tasks</p>
-        </div>
-      </div>
-      <ProgressBar percentage={percentage} color={color} showPercentage={false} />
-    </div>
-  );
 
   return (
     <div className="min-h-screen bg-gray-50 py-12 px-6">

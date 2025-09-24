@@ -13,6 +13,8 @@ import {
   CheckCircle,
   ArrowRight
 } from 'lucide-react'
+import FeatureCard from './ui/FeatureCard'
+import BenefitCard from './ui/BenefitCard'
 
 const About = () => {
   const features = [
@@ -122,22 +124,7 @@ const About = () => {
 
             <div className="grid lg:grid-cols-3 gap-8">
               {features.map((feature, index) => (
-                <div 
-                  key={index}
-                  className="group contextboxbackground rounded-2xl p-8 border border-white/10 hover:border-white/20 transition-all duration-500 hover:transform hover:scale-105"
-                >
-                  <div className="w-16 h-16 bg-gradient-to-br from-white/20 to-white/5 rounded-xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300">
-                    <feature.icon className="w-8 h-8 text-white" />
-                  </div>
-                  
-                  <h3 className="text-2xl font-bold text-white contextboxtextshadow mb-4">
-                    {feature.title}
-                  </h3>
-                  
-                  <p className="text-white/70 leading-relaxed">
-                    {feature.description}
-                  </p>
-                </div>
+                <FeatureCard key={index} feature={feature} index={index} />
               ))}
             </div>
           </div>
@@ -155,22 +142,7 @@ const About = () => {
 
             <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
               {benefits.map((benefit, index) => (
-                <div 
-                  key={index}
-                  className="contextboxbackground rounded-xl p-6 border border-white/10 hover:border-white/20 transition-all duration-300 text-center group"
-                >
-                  <div className="w-12 h-12 bg-gradient-to-br from-white/20 to-white/5 rounded-lg flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform duration-300">
-                    <benefit.icon className="w-6 h-6 text-white" />
-                  </div>
-                  
-                  <h3 className="text-lg font-bold text-white contextboxtextshadow mb-2">
-                    {benefit.title}
-                  </h3>
-                  
-                  <p className="text-sm text-white/70">
-                    {benefit.description}
-                  </p>
-                </div>
+                <BenefitCard key={index} benefit={benefit} index={index} />
               ))}
             </div>
           </div>
